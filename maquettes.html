@@ -1,0 +1,1274 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=360, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>BookSwap - Maquettes</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+
+:root {
+  --primary: #4A90D9;
+  --primary-dark: #3A7BC8;
+  --primary-light: #E8F0FE;
+  --success: #5CB85C;
+  --success-light: #E8F5E8;
+  --warning: #F0AD4E;
+  --danger: #D9534F;
+  --bg: #F5F5F5;
+  --surface: #FFFFFF;
+  --text: #212121;
+  --text-secondary: #757575;
+  --border: #E0E0E0;
+  --shadow: rgba(0,0,0,0.08);
+  --tab-bg: #FFFFFF;
+  --input-bg: #FFFFFF;
+  --chip-bg: #E8F0FE;
+  --chip-text: #4A90D9;
+  --skeleton: #E0E0E0;
+  --skeleton-shine: #F5F5F5;
+  --overlay: rgba(0,0,0,0.5);
+  --badge-unread: #E8F0FE;
+}
+
+.dark {
+  --primary: #6BA3E0;
+  --primary-dark: #4A90D9;
+  --primary-light: #1E2A4A;
+  --success: #6EC96E;
+  --success-light: #1A2E1A;
+  --warning: #F0AD4E;
+  --danger: #E06B67;
+  --bg: #1A1A2E;
+  --surface: #262640;
+  --text: #E0E0E0;
+  --text-secondary: #A0A0A0;
+  --border: #3A3A5C;
+  --shadow: rgba(0,0,0,0.3);
+  --tab-bg: #262640;
+  --input-bg: #2E2E4A;
+  --chip-bg: #1E2A4A;
+  --chip-text: #6BA3E0;
+  --skeleton: #3A3A5C;
+  --skeleton-shine: #4A4A6C;
+  --overlay: rgba(0,0,0,0.7);
+  --badge-unread: #1E2A4A;
+}
+
+body {
+  font-family: 'Inter', -apple-system, sans-serif;
+  background: #1a1a1a;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh;
+  color: var(--text);
+}
+
+/* ── Toolbar flottant ── */
+.toolbar {
+  position: fixed; top:0; left:50%; transform:translateX(-50%);
+  width: 360px; background: #111; color:#fff; z-index:9999;
+  display:flex; align-items:center; justify-content:space-between;
+  padding: 6px 12px; font-size:11px; border-bottom:1px solid #333;
+}
+.toolbar select, .toolbar button {
+  background:#222; color:#fff; border:1px solid #444; border-radius:4px;
+  padding:4px 8px; font-size:11px; cursor:pointer; font-family:Inter,sans-serif;
+}
+.toolbar button:hover { background:#333; }
+.toolbar .label { color:#888; margin-right:4px; }
+
+/* ── Phone frame ── */
+.phone {
+  width: 360px; min-height:640px; max-height:640px; background:var(--bg);
+  position:relative; overflow:hidden; margin-top:36px;
+  border-radius: 0 0 20px 20px;
+  box-shadow: 0 0 40px rgba(0,0,0,0.5);
+}
+
+/* ── Screens ── */
+.screen { display:none; flex-direction:column; height:640px; width:100%; position:absolute; top:0; left:0; background:var(--bg); }
+.screen.active { display:flex; }
+.screen-scroll { flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; }
+.screen-scroll::-webkit-scrollbar { display:none; }
+
+/* ── Status bar ── */
+.status-bar { height:24px; background:var(--surface); display:flex; align-items:center; justify-content:space-between; padding:0 16px; font-size:10px; color:var(--text-secondary); flex-shrink:0; }
+
+/* ── Headers ── */
+.header { height:52px; background:var(--surface); display:flex; align-items:center; padding:0 16px; border-bottom:1px solid var(--border); flex-shrink:0; }
+.header-title { font-size:18px; font-weight:600; flex:1; color:var(--text); }
+.header-back { width:32px; height:32px; display:flex; align-items:center; justify-content:center; cursor:pointer; margin-right:8px; font-size:20px; color:var(--text); border:none; background:none; }
+.header-action { width:32px; height:32px; display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--text-secondary); font-size:18px; background:none; border:none; }
+.header-right { display:flex; gap:4px; }
+
+/* ── Tab bar ── */
+.tab-bar { height:56px; background:var(--tab-bg); display:flex; border-top:1px solid var(--border); flex-shrink:0; }
+.tab-item { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; cursor:pointer; color:var(--text-secondary); gap:2px; position:relative; border:none; background:none; font-family:Inter,sans-serif; }
+.tab-item.active { color:var(--primary); }
+.tab-item .tab-icon { font-size:22px; }
+.tab-item .tab-label { font-size:10px; font-weight:500; }
+.tab-badge { position:absolute; top:4px; right:50%; transform:translateX(18px); width:16px; height:16px; background:var(--danger); color:#fff; font-size:9px; font-weight:700; border-radius:50%; display:flex; align-items:center; justify-content:center; }
+
+/* ── Buttons ── */
+.btn { height:48px; border-radius:8px; font-size:14px; font-weight:600; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; width:100%; font-family:Inter,sans-serif; transition:all 0.2s; }
+.btn-primary { background:var(--primary); color:#fff; box-shadow:0 2px 8px rgba(74,144,217,0.3); }
+.btn-primary:hover { background:var(--primary-dark); }
+.btn-primary:disabled { background:var(--border); color:var(--text-secondary); box-shadow:none; cursor:default; }
+.btn-secondary { background:transparent; color:var(--primary); border:1.5px solid var(--primary); }
+.btn-danger { background:transparent; color:var(--danger); border:1.5px solid var(--danger); }
+.btn-text { background:none; border:none; color:var(--primary); font-size:14px; font-weight:500; height:auto; width:auto; }
+.btn-text-muted { background:none; border:none; color:var(--text-secondary); font-size:13px; height:auto; width:auto; }
+.btn-sm { height:36px; font-size:13px; border-radius:6px; }
+
+/* ── Inputs ── */
+.input-group { margin-bottom:16px; }
+.input-label { font-size:12px; font-weight:500; color:var(--text-secondary); margin-bottom:6px; display:block; }
+.input { width:100%; height:48px; border:1.5px solid var(--border); border-radius:8px; padding:0 16px; font-size:14px; background:var(--input-bg); color:var(--text); font-family:Inter,sans-serif; outline:none; transition:border-color 0.2s; }
+.input:focus { border-color:var(--primary); }
+.input-error { border-color:var(--danger) !important; }
+.input-error-text { font-size:12px; color:var(--danger); margin-top:4px; }
+.input-icon { position:relative; }
+.input-icon .input { padding-right:48px; }
+.input-icon .icon { position:absolute; right:16px; top:50%; transform:translateY(-50%); color:var(--text-secondary); cursor:pointer; font-size:16px; }
+.textarea { height:100px; padding:12px 16px; resize:none; line-height:1.5; }
+
+/* ── Cards ── */
+.card { background:var(--surface); border-radius:12px; box-shadow:0 2px 8px var(--shadow); padding:16px; margin-bottom:12px; }
+.book-card { display:flex; gap:12px; cursor:pointer; }
+.book-card-img { width:80px; height:80px; border-radius:8px; background:var(--primary-light); flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:28px; overflow:hidden; }
+.book-card-img img { width:100%; height:100%; object-fit:cover; }
+.book-card-info { flex:1; min-width:0; }
+.book-card-title { font-size:15px; font-weight:600; color:var(--text); margin-bottom:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.book-card-author { font-size:13px; color:var(--text-secondary); margin-bottom:6px; }
+.book-card-meta { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+.book-card-date { font-size:12px; color:var(--text-secondary); margin-top:4px; }
+
+/* ── Badges ── */
+.badge { display:inline-flex; align-items:center; height:24px; padding:0 10px; border-radius:12px; font-size:12px; font-weight:600; }
+.badge-primary { background:var(--primary-light); color:var(--primary); }
+.badge-success { background:var(--success-light); color:var(--success); }
+.badge-warning { background:#FFF3E0; color:#E68A00; }
+.badge-danger { background:#FDECEA; color:var(--danger); }
+.badge-gray { background:var(--bg); color:var(--text-secondary); }
+
+/* ── Chips ── */
+.chips { display:flex; gap:8px; flex-wrap:wrap; }
+.chip { height:32px; padding:0 14px; border-radius:16px; font-size:13px; font-weight:500; display:flex; align-items:center; cursor:pointer; border:1.5px solid var(--border); background:var(--surface); color:var(--text-secondary); transition:all 0.2s; }
+.chip.active { background:var(--primary); color:#fff; border-color:var(--primary); }
+
+/* ── Toggle switch ── */
+.mode-switch { display:flex; background:var(--surface); border-radius:12px; padding:4px; border:1.5px solid var(--border); }
+.mode-btn { flex:1; height:40px; border:none; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer; transition:all 0.2s; font-family:Inter,sans-serif; background:transparent; color:var(--text-secondary); }
+.mode-btn.active { background:var(--primary); color:#fff; box-shadow:0 2px 6px rgba(74,144,217,0.3); }
+
+/* ── Search bar ── */
+.search-bar { height:44px; display:flex; align-items:center; gap:8px; background:var(--surface); border:1.5px solid var(--border); border-radius:10px; padding:0 14px; }
+.search-bar input { flex:1; border:none; background:none; outline:none; font-size:14px; color:var(--text); font-family:Inter,sans-serif; }
+.search-bar input::placeholder { color:var(--text-secondary); }
+.search-icon { color:var(--text-secondary); font-size:16px; }
+
+/* ── OTP inputs ── */
+.otp-container { display:flex; gap:12px; justify-content:center; }
+.otp-box { width:56px; height:56px; border:2px solid var(--border); border-radius:8px; text-align:center; font-size:24px; font-weight:700; color:var(--text); background:var(--input-bg); outline:none; font-family:Inter,sans-serif; transition:border-color 0.2s; }
+.otp-box:focus { border-color:var(--primary); }
+.otp-box.filled { border-color:var(--primary); }
+.otp-box.error { border-color:var(--danger); animation:shake 0.4s; }
+
+@keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-6px)} 75%{transform:translateX(6px)} }
+
+/* ── Empty state ── */
+.empty-state { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:40px 24px; text-align:center; }
+.empty-state .icon { font-size:80px; margin-bottom:16px; opacity:0.5; }
+.empty-state h3 { font-size:18px; font-weight:600; margin-bottom:8px; color:var(--text); }
+.empty-state p { font-size:14px; color:var(--text-secondary); margin-bottom:24px; line-height:1.5; }
+
+/* ── Skeleton ── */
+.skeleton { background:linear-gradient(90deg,var(--skeleton) 25%,var(--skeleton-shine) 50%,var(--skeleton) 75%); background-size:200% 100%; animation:shimmer 1.5s infinite; border-radius:8px; }
+@keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+
+/* ── Notification items ── */
+.notif-item { display:flex; gap:12px; padding:14px 16px; border-bottom:1px solid var(--border); cursor:pointer; }
+.notif-item.unread { background:var(--badge-unread); }
+.notif-dot { width:8px; height:8px; border-radius:50%; background:var(--primary); flex-shrink:0; margin-top:6px; }
+.notif-dot.read { background:transparent; }
+.notif-content { flex:1; }
+.notif-text { font-size:14px; color:var(--text); line-height:1.4; }
+.notif-time { font-size:12px; color:var(--text-secondary); margin-top:4px; }
+
+/* ── Profile menu items ── */
+.menu-item { display:flex; align-items:center; padding:16px; background:var(--surface); border-bottom:1px solid var(--border); cursor:pointer; }
+.menu-item:first-child { border-radius:12px 12px 0 0; }
+.menu-item:last-child { border-radius:0 0 12px 12px; border-bottom:none; }
+.menu-icon { font-size:20px; margin-right:14px; width:24px; text-align:center; }
+.menu-label { flex:1; font-size:15px; font-weight:500; color:var(--text); }
+.menu-arrow { color:var(--text-secondary); font-size:14px; }
+.menu-toggle { width:44px; height:26px; border-radius:13px; position:relative; cursor:pointer; transition:background 0.2s; border:none; }
+.menu-toggle.off { background:var(--border); }
+.menu-toggle.on { background:var(--primary); }
+.menu-toggle::after { content:''; position:absolute; width:22px; height:22px; background:#fff; border-radius:50%; top:2px; transition:left 0.2s; box-shadow:0 1px 3px rgba(0,0,0,0.2); }
+.menu-toggle.off::after { left:2px; }
+.menu-toggle.on::after { left:20px; }
+
+/* ── Modal ── */
+.modal-overlay { position:absolute; top:0; left:0; width:100%; height:100%; background:var(--overlay); display:none; align-items:center; justify-content:center; z-index:100; padding:24px; }
+.modal-overlay.show { display:flex; }
+.modal { background:var(--surface); border-radius:16px; padding:24px; width:100%; max-width:300px; text-align:center; }
+.modal h3 { font-size:18px; font-weight:600; margin-bottom:12px; color:var(--text); }
+.modal p { font-size:14px; color:var(--text-secondary); margin-bottom:24px; line-height:1.5; }
+.modal-actions { display:flex; gap:12px; }
+.modal-actions .btn { flex:1; height:42px; }
+
+/* ── Onboarding ── */
+.onboarding-illustration { font-size:120px; text-align:center; margin:20px 0; }
+.onboarding-dots { display:flex; gap:8px; justify-content:center; margin:16px 0; }
+.onboarding-dot { width:8px; height:8px; border-radius:50%; background:var(--border); }
+.onboarding-dot.active { background:var(--primary); width:24px; }
+
+/* ── Splash ── */
+.splash-screen { display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; background:var(--primary); }
+.splash-logo { font-size:80px; margin-bottom:16px; }
+.splash-title { font-size:28px; font-weight:700; color:#fff; margin-bottom:8px; }
+.splash-sub { font-size:14px; color:rgba(255,255,255,0.8); }
+.splash-loader { width:120px; height:3px; background:rgba(255,255,255,0.2); border-radius:2px; margin-top:32px; overflow:hidden; }
+.splash-loader::after { content:''; display:block; width:40%; height:100%; background:#fff; border-radius:2px; animation:load 1.5s ease-in-out infinite; }
+@keyframes load { 0%{transform:translateX(-100%)} 100%{transform:translateX(350%)} }
+
+/* ── Detail book image ── */
+.detail-image { width:100%; height:240px; background:var(--primary-light); display:flex; align-items:center; justify-content:center; font-size:80px; overflow:hidden; }
+.detail-image img { width:100%; height:100%; object-fit:cover; }
+
+/* ── Password strength ── */
+.pw-strength { display:flex; gap:4px; margin-top:6px; align-items:center; }
+.pw-bar { flex:1; height:4px; border-radius:2px; background:var(--border); }
+.pw-bar.active1 { background:var(--danger); }
+.pw-bar.active2 { background:var(--warning); }
+.pw-bar.active3 { background:var(--success); }
+.pw-label { font-size:11px; margin-left:8px; color:var(--text-secondary); }
+
+/* ── Counter ── */
+.counter-result { font-size:13px; color:var(--text-secondary); margin:8px 0; }
+
+/* ── Floating action ── */
+.fab { position:absolute; bottom:70px; right:16px; width:56px; height:56px; border-radius:28px; background:var(--primary); color:#fff; border:none; font-size:28px; cursor:pointer; box-shadow:0 4px 12px rgba(74,144,217,0.4); display:flex; align-items:center; justify-content:center; z-index:10; }
+
+/* ── Supply card ── */
+.supply-price { font-size:15px; font-weight:700; color:var(--primary); margin-top:4px; }
+.supply-supplier { font-size:12px; color:var(--text-secondary); }
+
+/* ── Profile header ── */
+.profile-header { display:flex; flex-direction:column; align-items:center; padding:24px 16px; }
+.avatar { width:72px; height:72px; border-radius:50%; background:var(--primary); color:#fff; display:flex; align-items:center; justify-content:center; font-size:28px; font-weight:700; margin-bottom:12px; }
+.profile-name { font-size:20px; font-weight:600; color:var(--text); }
+.profile-email { font-size:13px; color:var(--text-secondary); margin-top:2px; }
+
+/* ── Error banner ── */
+.error-banner { background:#FDECEA; color:var(--danger); padding:10px 16px; font-size:13px; font-weight:500; display:none; align-items:center; gap:8px; }
+.error-banner.show { display:flex; }
+
+/* ── Sticky bottom ── */
+.sticky-bottom { padding:12px 16px; background:var(--surface); border-top:1px solid var(--border); flex-shrink:0; }
+
+/* ── Section padding ── */
+.px { padding-left:16px; padding-right:16px; }
+.py { padding-top:16px; padding-bottom:16px; }
+.p { padding:16px; }
+.pt-sm { padding-top:8px; }
+.pb-sm { padding-bottom:8px; }
+.mb { margin-bottom:16px; }
+.mb-sm { margin-bottom:8px; }
+.mb-lg { margin-bottom:24px; }
+.mt { margin-top:16px; }
+.mt-sm { margin-top:8px; }
+.gap-sm { gap:8px; }
+.text-center { text-align:center; }
+.text-right { text-align:right; }
+.flex-center { display:flex; align-items:center; justify-content:center; }
+
+/* ── State indicator panel ── */
+.state-bar { display:flex; gap:4px; padding:8px 16px; overflow-x:auto; background:var(--surface); border-bottom:1px solid var(--border); flex-shrink:0; }
+.state-bar::-webkit-scrollbar { display:none; }
+.state-btn { white-space:nowrap; padding:4px 10px; border-radius:6px; font-size:10px; font-weight:600; border:1px solid var(--border); background:var(--surface); color:var(--text-secondary); cursor:pointer; font-family:Inter,sans-serif; }
+.state-btn.active { background:var(--primary); color:#fff; border-color:var(--primary); }
+</style>
+</head>
+<body>
+
+<!-- TOOLBAR -->
+<div class="toolbar">
+  <div>
+    <span class="label">Ecran:</span>
+    <select id="screenSelect" onchange="goTo(this.value)">
+      <option value="splash">Splash Screen</option>
+      <option value="onboarding">Onboarding</option>
+      <option value="login">Connexion</option>
+      <option value="register">Inscription</option>
+      <option value="verify-otp">Verification OTP</option>
+      <option value="home-search">Accueil - Recherche</option>
+      <option value="home-mybooks">Accueil - J'ai un livre</option>
+      <option value="book-detail">Detail livre</option>
+      <option value="add-book">Ajouter un livre</option>
+      <option value="supplies">Fournitures</option>
+      <option value="notifications">Notifications</option>
+      <option value="profile">Profil</option>
+    </select>
+  </div>
+  <div>
+    <button onclick="toggleTheme()" id="themeBtn">🌙 Sombre</button>
+  </div>
+</div>
+
+<!-- PHONE -->
+<div class="phone" id="phone">
+
+  <!-- ============ SPLASH ============ -->
+  <div class="screen active" id="splash">
+    <div class="splash-screen" onclick="goTo('onboarding')">
+      <div class="splash-logo">📚</div>
+      <div class="splash-title">BookSwap</div>
+      <div class="splash-sub">Echangez vos livres scolaires</div>
+      <div class="splash-loader"></div>
+    </div>
+  </div>
+
+  <!-- ============ ONBOARDING ============ -->
+  <div class="screen" id="onboarding">
+    <div class="status-bar"><span>9:41</span><span>📶 🔋</span></div>
+    <div class="screen-scroll" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;">
+      <div id="onboard-slide">
+        <div class="onboarding-illustration" id="onboard-icon">🔍</div>
+        <h2 style="font-size:22px;font-weight:700;text-align:center;margin-bottom:8px;color:var(--text)" id="onboard-title">Trouvez vos livres</h2>
+        <p style="font-size:14px;color:var(--text-secondary);text-align:center;line-height:1.6;padding:0 12px" id="onboard-desc">Recherchez des livres scolaires par niveau, classe ou mot-cle. Des milliers de livres disponibles pres de chez vous.</p>
+      </div>
+      <div class="onboarding-dots" id="onboard-dots">
+        <div class="onboarding-dot active" data-i="0"></div>
+        <div class="onboarding-dot" data-i="1"></div>
+        <div class="onboarding-dot" data-i="2"></div>
+      </div>
+      <div style="width:100%;margin-top:24px;">
+        <button class="btn btn-primary mb" onclick="nextOnboard()">Suivant</button>
+        <button class="btn btn-text-muted" style="width:100%" onclick="goTo('login')">Passer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ LOGIN ============ -->
+  <div class="screen" id="login">
+    <div class="status-bar"><span>9:41</span><span>📶 🔋</span></div>
+    <div class="error-banner" id="login-error">⚠️ Identifiants incorrects</div>
+    <div class="state-bar">
+      <button class="state-btn active" onclick="setLoginState('normal')">Normal</button>
+      <button class="state-btn" onclick="setLoginState('error')">Erreur</button>
+      <button class="state-btn" onclick="setLoginState('loading')">Chargement</button>
+    </div>
+    <div class="screen-scroll" style="display:flex;flex-direction:column;padding:24px;">
+      <div style="text-align:center;margin-bottom:32px;margin-top:16px;">
+        <div style="font-size:56px;margin-bottom:8px;">📚</div>
+        <h1 style="font-size:24px;font-weight:600;">Connexion</h1>
+      </div>
+      <div class="input-group">
+        <label class="input-label">Email</label>
+        <input class="input" type="email" placeholder="amadou@example.com" id="login-email">
+      </div>
+      <div class="input-group">
+        <label class="input-label">Mot de passe</label>
+        <div class="input-icon">
+          <input class="input" type="password" placeholder="••••••••" id="login-password">
+          <span class="icon" onclick="togglePw(this)">👁</span>
+        </div>
+      </div>
+      <div style="text-align:right;margin-bottom:24px;">
+        <button class="btn-text" style="font-size:13px;" onclick="goTo('forgot-pw')">Mot de passe oublie ?</button>
+      </div>
+      <button class="btn btn-primary mb" id="login-btn" onclick="goTo('home-search')">Se connecter</button>
+      <div style="text-align:center;margin-top:16px;">
+        <span style="font-size:13px;color:var(--text-secondary)">Pas encore de compte ? </span>
+        <button class="btn-text" style="font-size:13px;" onclick="goTo('register')">Inscrivez-vous</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ REGISTER ============ -->
+  <div class="screen" id="register">
+    <div class="status-bar"><span>9:41</span><span>📶 🔋</span></div>
+    <div class="header">
+      <button class="header-back" onclick="goTo('login')">←</button>
+      <span class="header-title">Inscription</span>
+    </div>
+    <div class="state-bar">
+      <button class="state-btn active" onclick="setRegState('normal')">Normal</button>
+      <button class="state-btn" onclick="setRegState('error')">Erreurs</button>
+      <button class="state-btn" onclick="setRegState('loading')">Chargement</button>
+    </div>
+    <div class="screen-scroll p">
+      <div class="input-group">
+        <label class="input-label">Prenom *</label>
+        <input class="input" placeholder="Amadou">
+      </div>
+      <div class="input-group">
+        <label class="input-label">Nom *</label>
+        <input class="input" placeholder="Diallo" id="reg-nom">
+      </div>
+      <div class="input-group">
+        <label class="input-label">Email *</label>
+        <input class="input" type="email" placeholder="amadou@example.com" id="reg-email">
+        <div class="input-error-text" id="reg-email-err" style="display:none">Ce email est deja utilise</div>
+      </div>
+      <div class="input-group">
+        <label class="input-label">Telephone *</label>
+        <input class="input" placeholder="+223 70 12 34 56" id="reg-phone">
+        <div class="input-error-text" id="reg-phone-err" style="display:none">Ce numero est deja associe a un compte</div>
+      </div>
+      <div class="input-group">
+        <label class="input-label">Adresse *</label>
+        <input class="input" placeholder="Bamako, Quartier ACI 2000">
+      </div>
+      <div class="input-group">
+        <label class="input-label">Mot de passe *</label>
+        <div class="input-icon">
+          <input class="input" type="password" placeholder="Min. 8 caracteres">
+          <span class="icon" onclick="togglePw(this)">👁</span>
+        </div>
+        <div class="pw-strength">
+          <div class="pw-bar active1"></div>
+          <div class="pw-bar active2"></div>
+          <div class="pw-bar active2"></div>
+          <div class="pw-bar"></div>
+          <span class="pw-label">Moyen</span>
+        </div>
+      </div>
+      <div class="input-group">
+        <label class="input-label">Niveaux scolaires d'interet *</label>
+        <div class="chips" id="reg-chips">
+          <div class="chip" onclick="toggleChip(this)">CP</div>
+          <div class="chip" onclick="toggleChip(this)">CE1</div>
+          <div class="chip" onclick="toggleChip(this)">CE2</div>
+          <div class="chip" onclick="toggleChip(this)">CM1</div>
+          <div class="chip" onclick="toggleChip(this)">CM2</div>
+          <div class="chip active" onclick="toggleChip(this)">6eme</div>
+          <div class="chip active" onclick="toggleChip(this)">5eme</div>
+          <div class="chip" onclick="toggleChip(this)">4eme</div>
+          <div class="chip" onclick="toggleChip(this)">3eme</div>
+          <div class="chip" onclick="toggleChip(this)">2nde</div>
+          <div class="chip" onclick="toggleChip(this)">1ere</div>
+          <div class="chip" onclick="toggleChip(this)">Term</div>
+          <div class="chip" onclick="toggleChip(this)">Superieur</div>
+        </div>
+      </div>
+      <button class="btn btn-primary mb" id="reg-btn" onclick="goTo('verify-otp')">S'inscrire</button>
+      <div style="text-align:center;">
+        <span style="font-size:13px;color:var(--text-secondary)">Deja un compte ? </span>
+        <button class="btn-text" style="font-size:13px;" onclick="goTo('login')">Connectez-vous</button>
+      </div>
+      <div style="height:24px"></div>
+    </div>
+  </div>
+
+  <!-- ============ VERIFY OTP ============ -->
+  <div class="screen" id="verify-otp">
+    <div class="status-bar"><span>9:41</span><span>📶 🔋</span></div>
+    <div class="header">
+      <button class="header-back" onclick="goTo('register')">←</button>
+      <span class="header-title">Verification</span>
+    </div>
+    <div class="state-bar">
+      <button class="state-btn active" onclick="setOtpState('normal')">Normal</button>
+      <button class="state-btn" onclick="setOtpState('filled')">Rempli</button>
+      <button class="state-btn" onclick="setOtpState('error')">Code incorrect</button>
+      <button class="state-btn" onclick="setOtpState('expired')">Expire</button>
+      <button class="state-btn" onclick="setOtpState('success')">Succes</button>
+    </div>
+    <div class="screen-scroll" style="display:flex;flex-direction:column;align-items:center;padding:32px 24px;">
+      <div style="font-size:56px;margin-bottom:16px;">📱</div>
+      <h2 style="font-size:20px;font-weight:600;margin-bottom:8px;color:var(--text)">Entrez le code recu</h2>
+      <p style="font-size:14px;color:var(--text-secondary);text-align:center;line-height:1.5;margin-bottom:24px;">
+        Un code a 4 chiffres a ete envoye au<br><strong style="color:var(--text)">+223 70 ** ** 56</strong>
+      </p>
+      <div class="otp-container mb-lg" id="otp-boxes">
+        <input class="otp-box" maxlength="1" value="" id="otp1">
+        <input class="otp-box" maxlength="1" value="" id="otp2">
+        <input class="otp-box" maxlength="1" value="" id="otp3">
+        <input class="otp-box" maxlength="1" value="" id="otp4">
+      </div>
+      <div id="otp-timer" style="font-size:13px;color:var(--text-secondary);margin-bottom:24px;">Expire dans <strong style="color:var(--primary)">4:32</strong></div>
+      <div id="otp-error-msg" style="display:none;font-size:13px;color:var(--danger);margin-bottom:16px;text-align:center;"></div>
+      <div id="otp-success-msg" style="display:none;flex-direction:column;align-items:center;gap:8px;">
+        <div style="font-size:48px;">✅</div>
+        <div style="font-size:16px;font-weight:600;color:var(--success);">Numero verifie !</div>
+      </div>
+      <button class="btn btn-primary mb" id="otp-btn" onclick="goTo('home-search')">Verifier</button>
+      <div style="text-align:center;">
+        <p style="font-size:13px;color:var(--text-secondary);">Vous n'avez pas recu le code ?</p>
+        <button class="btn-text" id="otp-resend" style="font-size:13px;margin-top:4px;">Renvoyer le code</button>
+        <div id="otp-cooldown" style="font-size:12px;color:var(--text-secondary);margin-top:4px;">Disponible dans <strong>0:45</strong></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ HOME SEARCH ============ -->
+  <div class="screen" id="home-search">
+    <div class="status-bar"><span>9:41</span><span>📶 🔋</span></div>
+    <div class="header">
+      <span class="header-title">Bonjour, Amadou</span>
+      <div class="header-right">
+        <button class="header-action" onclick="goTo('notifications')" style="position:relative;">
+          🔔<span style="position:absolute;top:2px;right:0;width:14px;height:14px;background:var(--danger);color:#fff;font-size:8px;font-weight:700;border-radius:50%;display:flex;align-items:center;justify-content:center;">3</span>
+        </button>
+      </div>
+    </div>
+    <div class="state-bar">
+      <button class="state-btn active" onclick="setHomeState('normal')">Normal</button>
+      <button class="state-btn" onclick="setHomeState('loading')">Chargement</button>
+      <button class="state-btn" onclick="setHomeState('empty')">Vide</button>
+      <button class="state-btn" onclick="setHomeState('error')">Erreur</button>
+    </div>
+    <div class="screen-scroll">
+      <div class="p">
+        <div class="mode-switch mb">
+          <button class="mode-btn active">Je recherche</button>
+          <button class="mode-btn" onclick="goTo('home-mybooks')">J'ai un livre</button>
+        </div>
+        <div class="search-bar mb">
+          <span class="search-icon">🔍</span>
+          <input placeholder="Rechercher un livre...">
+        </div>
+        <div class="chips mb" id="home-filters">
+          <div class="chip active" onclick="toggleChip(this)">Tous</div>
+          <div class="chip" onclick="toggleChip(this)">6eme</div>
+          <div class="chip" onclick="toggleChip(this)">5eme</div>
+          <div class="chip" onclick="toggleChip(this)">Neuf</div>
+          <div class="chip" onclick="toggleChip(this)">Occasion</div>
+        </div>
+        <!-- NORMAL state -->
+        <div id="home-normal">
+          <div class="counter-result">45 livres disponibles</div>
+          <div class="card book-card" onclick="goTo('book-detail')">
+            <div class="book-card-img">📕</div>
+            <div class="book-card-info">
+              <div class="book-card-title">Mathematiques 6eme - CIAM</div>
+              <div class="book-card-author">Collectif CIAM</div>
+              <div class="book-card-meta">
+                <span class="badge badge-primary">6eme</span>
+                <span class="badge badge-warning">Occasion</span>
+              </div>
+              <div class="book-card-date">Il y a 2 jours</div>
+            </div>
+          </div>
+          <div class="card book-card" onclick="goTo('book-detail')">
+            <div class="book-card-img">📗</div>
+            <div class="book-card-info">
+              <div class="book-card-title">Physique-Chimie Terminale S</div>
+              <div class="book-card-author">Hachette</div>
+              <div class="book-card-meta">
+                <span class="badge badge-primary">Terminale</span>
+                <span class="badge badge-success">Neuf</span>
+              </div>
+              <div class="book-card-date">Il y a 5 jours</div>
+            </div>
+          </div>
+          <div class="card book-card" onclick="goTo('book-detail')">
+            <div class="book-card-img">📘</div>
+            <div class="book-card-info">
+              <div class="book-card-title">Francais 5eme - Hatier</div>
+              <div class="book-card-author">Hatier</div>
+              <div class="book-card-meta">
+                <span class="badge badge-primary">5eme</span>
+                <span class="badge badge-warning">Occasion</span>
+              </div>
+              <div class="book-card-date">Il y a 1 semaine</div>
+            </div>
+          </div>
+          <div class="card book-card" onclick="goTo('book-detail')">
+            <div class="book-card-img">📙</div>
+            <div class="book-card-info">
+              <div class="book-card-title">SVT 3eme</div>
+              <div class="book-card-author">Bordas</div>
+              <div class="book-card-meta">
+                <span class="badge badge-primary">3eme</span>
+                <span class="badge badge-success">Neuf</span>
+              </div>
+              <div class="book-card-date">Il y a 2 semaines</div>
+            </div>
+          </div>
+        </div>
+        <!-- LOADING state -->
+        <div id="home-loading" style="display:none;">
+          <div class="counter-result"><div class="skeleton" style="width:140px;height:14px;"></div></div>
+          <div class="card book-card"><div class="skeleton" style="width:80px;height:80px;flex-shrink:0;"></div><div style="flex:1;display:flex;flex-direction:column;gap:8px;"><div class="skeleton" style="width:80%;height:16px;"></div><div class="skeleton" style="width:50%;height:14px;"></div><div class="skeleton" style="width:60%;height:24px;"></div></div></div>
+          <div class="card book-card"><div class="skeleton" style="width:80px;height:80px;flex-shrink:0;"></div><div style="flex:1;display:flex;flex-direction:column;gap:8px;"><div class="skeleton" style="width:70%;height:16px;"></div><div class="skeleton" style="width:40%;height:14px;"></div><div class="skeleton" style="width:55%;height:24px;"></div></div></div>
+          <div class="card book-card"><div class="skeleton" style="width:80px;height:80px;flex-shrink:0;"></div><div style="flex:1;display:flex;flex-direction:column;gap:8px;"><div class="skeleton" style="width:75%;height:16px;"></div><div class="skeleton" style="width:45%;height:14px;"></div><div class="skeleton" style="width:50%;height:24px;"></div></div></div>
+        </div>
+        <!-- EMPTY state -->
+        <div id="home-empty" style="display:none;">
+          <div class="empty-state">
+            <div class="icon">📭</div>
+            <h3>Aucun livre trouve</h3>
+            <p>Essayez d'elargir vos filtres ou de modifier votre recherche.</p>
+            <button class="btn btn-secondary btn-sm" style="width:auto;padding:0 24px;">Reinitialiser les filtres</button>
+          </div>
+        </div>
+        <!-- ERROR state -->
+        <div id="home-error" style="display:none;">
+          <div class="empty-state">
+            <div class="icon">⚠️</div>
+            <h3>Erreur de connexion</h3>
+            <p>Impossible de charger les livres. Verifiez votre connexion internet.</p>
+            <button class="btn btn-primary btn-sm" style="width:auto;padding:0 24px;" onclick="setHomeState('normal')">Reessayer</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="tab-bar">
+      <button class="tab-item active" onclick="goTo('home-search')"><span class="tab-icon">🏠</span><span class="tab-label">Accueil</span></button>
+      <button class="tab-item" onclick="goTo('supplies')"><span class="tab-icon">📦</span><span class="tab-label">Fournitures</span></button>
+      <button class="tab-item" onclick="goTo('notifications')"><span class="tab-icon">🔔</span><span class="tab-label">Notifs</span><span class="tab-badge">3</span></button>
+      <button class="tab-item" onclick="goTo('profile')"><span class="tab-icon">👤</span><span class="tab-label">Profil</span></button>
+    </div>
+  </div>
+
+  <!-- ============ HOME MY BOOKS ============ -->
+  <div class="screen" id="home-mybooks">
+    <div class="status-bar"><span>9:41</span><span>📶 🔋</span></div>
+    <div class="header">
+      <span class="header-title">Bonjour, Amadou</span>
+      <div class="header-right">
+        <button class="header-action" onclick="goTo('notifications')" style="position:relative;">
+          🔔<span style="position:absolute;top:2px;right:0;width:14px;height:14px;background:var(--danger);color:#fff;font-size:8px;font-weight:700;border-radius:50%;display:flex;align-items:center;justify-content:center;">3</span>
+        </button>
+      </div>
+    </div>
+    <div class="state-bar">
+      <button class="state-btn active" onclick="setMyBooksState('normal')">Normal</button>
+      <button class="state-btn" onclick="setMyBooksState('empty')">Vide</button>
+    </div>
+    <div class="screen-scroll">
+      <div class="p">
+        <div class="mode-switch mb">
+          <button class="mode-btn" onclick="goTo('home-search')">Je recherche</button>
+          <button class="mode-btn active">J'ai un livre</button>
+        </div>
+        <h3 style="font-size:16px;font-weight:600;margin-bottom:12px;color:var(--text)">Mes livres proposes</h3>
+        <!-- NORMAL -->
+        <div id="mybooks-normal">
+          <div class="card book-card" onclick="goTo('book-detail')">
+            <div class="book-card-img">📕</div>
+            <div class="book-card-info">
+              <div class="book-card-title">Mathematiques 6eme - CIAM</div>
+              <div class="book-card-meta">
+                <span class="badge badge-success">● Disponible</span>
+              </div>
+              <div class="book-card-date" style="color:var(--primary);font-weight:500;">2 demandes</div>
+            </div>
+          </div>
+          <div class="card book-card" onclick="goTo('book-detail')">
+            <div class="book-card-img">📗</div>
+            <div class="book-card-info">
+              <div class="book-card-title">Francais 5eme - Hatier</div>
+              <div class="book-card-meta">
+                <span class="badge badge-warning">● Reserve</span>
+              </div>
+              <div class="book-card-date" style="color:var(--primary);font-weight:500;">1 demande</div>
+            </div>
+          </div>
+          <div class="card book-card">
+            <div class="book-card-img">📘</div>
+            <div class="book-card-info">
+              <div class="book-card-title">Histoire-Geo 4eme</div>
+              <div class="book-card-meta">
+                <span class="badge badge-gray">● Echange</span>
+              </div>
+              <div class="book-card-date">Echange le 05/04</div>
+            </div>
+          </div>
+          <div style="height:12px;"></div>
+          <button class="btn btn-primary" onclick="goTo('add-book')">+ Ajouter un livre</button>
+        </div>
+        <!-- EMPTY -->
+        <div id="mybooks-empty" style="display:none;">
+          <div class="empty-state">
+            <div class="icon">📚</div>
+            <h3>Aucun livre propose</h3>
+            <p>Partagez vos anciens livres avec d'autres eleves !</p>
+            <button class="btn btn-primary btn-sm" style="width:auto;padding:0 24px;" onclick="goTo('add-book')">+ Ajouter un livre</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="tab-bar">
+      <button class="tab-item active"><span class="tab-icon">🏠</span><span class="tab-label">Accueil</span></button>
+      <button class="tab-item" onclick="goTo('supplies')"><span class="tab-icon">📦</span><span class="tab-label">Fournitures</span></button>
+      <button class="tab-item" onclick="goTo('notifications')"><span class="tab-icon">🔔</span><span class="tab-label">Notifs</span><span class="tab-badge">3</span></button>
+      <button class="tab-item" onclick="goTo('profile')"><span class="tab-icon">👤</span><span class="tab-label">Profil</span></button>
+    </div>
+  </div>
+
+  <!-- ============ BOOK DETAIL ============ -->
+  <div class="screen" id="book-detail">
+    <div class="status-bar"><span>9:41</span><span>📶 🔋</span></div>
+    <div class="header">
+      <button class="header-back" onclick="goTo('home-search')">←</button>
+      <span class="header-title"></span>
+      <div class="header-right"><button class="header-action">⋯</button></div>
+    </div>
+    <div class="state-bar">
+      <button class="state-btn active" onclick="setDetailState('available')">Disponible</button>
+      <button class="state-btn" onclick="setDetailState('requested')">Deja demande</button>
+      <button class="state-btn" onclick="setDetailState('reserved')">Reserve</button>
+      <button class="state-btn" onclick="setDetailState('owner')">Mon livre</button>
+    </div>
+    <div class="screen-scroll">
+      <div class="detail-image">📕</div>
+      <div class="p">
+        <h1 style="font-size:22px;font-weight:700;margin-bottom:4px;color:var(--text);">Mathematiques 6eme</h1>
+        <p style="font-size:15px;color:var(--text-secondary);margin-bottom:16px;">Collection CIAM</p>
+        <div class="chips mb">
+          <span class="badge badge-primary">6eme</span>
+          <span class="badge badge-warning">Occasion</span>
+        </div>
+        <h3 style="font-size:16px;font-weight:600;margin-bottom:8px;color:var(--text);">Description</h3>
+        <p style="font-size:14px;color:var(--text-secondary);line-height:1.6;margin-bottom:16px;">
+          Bon etat, quelques annotations au crayon. Pages 45-46 legerement cornees. Couverture en bon etat, pas de pages arrachees.
+        </p>
+        <div style="display:flex;justify-content:space-between;font-size:13px;color:var(--text-secondary);padding:12px 0;border-top:1px solid var(--border);">
+          <span>Propose par <strong style="color:var(--text)">Fatou K.</strong></span>
+          <span>Il y a 2 jours</span>
+        </div>
+      </div>
+    </div>
+    <div class="sticky-bottom" id="detail-actions">
+      <button class="btn btn-primary" id="detail-btn" onclick="showModal('confirm-modal')">Je veux ce livre</button>
+    </div>
+
+    <!-- Confirm modal -->
+    <div class="modal-overlay" id="confirm-modal">
+      <div class="modal">
+        <h3>Confirmer la demande ?</h3>
+        <p>L'equipe vous mettra en contact avec le proprietaire du livre.</p>
+        <div class="modal-actions">
+          <button class="btn btn-secondary btn-sm" onclick="hideModal('confirm-modal')">Annuler</button>
+          <button class="btn btn-primary btn-sm" onclick="hideModal('confirm-modal');setDetailState('requested')">Confirmer</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ ADD BOOK ============ -->
+  <div class="screen" id="add-book">
+    <div class="status-bar"><span>9:41</span><span>📶 🔋</span></div>
+    <div class="header">
+      <button class="header-back" onclick="goTo('home-mybooks')">←</button>
+      <span class="header-title">Ajouter un livre</span>
+    </div>
+    <div class="state-bar">
+      <button class="state-btn active" onclick="setAddState('empty')">Vide</button>
+      <button class="state-btn" onclick="setAddState('filled')">Rempli</button>
+      <button class="state-btn" onclick="setAddState('photo')">Avec photo</button>
+    </div>
+    <div class="screen-scroll p">
+      <!-- Photo zone -->
+      <div id="add-photo-zone" style="width:100%;height:140px;border:2px dashed var(--border);border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;margin-bottom:16px;cursor:pointer;background:var(--surface);color:var(--text-secondary);" onclick="setAddState('photo')">
+        <div style="font-size:32px;margin-bottom:4px;" id="add-photo-icon">📷</div>
+        <div style="font-size:13px;" id="add-photo-text">Ajouter une photo de couverture</div>
+      </div>
+      <div class="input-group">
+        <label class="input-label">Titre *</label>
+        <input class="input" placeholder="Titre du livre" id="add-title">
+      </div>
+      <div class="input-group">
+        <label class="input-label">Auteur</label>
+        <input class="input" placeholder="Nom de l'auteur" id="add-author">
+      </div>
+      <div class="input-group">
+        <label class="input-label">Niveau scolaire *</label>
+        <select class="input" id="add-level" style="color:var(--text-secondary);">
+          <option>Selectionner...</option>
+          <option>CP</option><option>CE1</option><option>CE2</option><option>CM1</option><option>CM2</option>
+          <option>6eme</option><option>5eme</option><option>4eme</option><option>3eme</option>
+          <option>2nde</option><option>1ere</option><option>Terminale</option><option>Superieur</option>
+        </select>
+      </div>
+      <div class="input-group">
+        <label class="input-label">Classe</label>
+        <input class="input" placeholder="Ex: 6eme A" id="add-class">
+      </div>
+      <div class="input-group">
+        <label class="input-label">Etat *</label>
+        <div style="display:flex;gap:12px;">
+          <label style="flex:1;height:44px;border:1.5px solid var(--border);border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;color:var(--text-secondary);background:var(--surface);" id="radio-new" onclick="selectRadio('new')">
+            <span id="radio-new-dot" style="margin-right:6px;">○</span> Neuf
+          </label>
+          <label style="flex:1;height:44px;border:1.5px solid var(--primary);border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;color:var(--primary);background:var(--primary-light);" id="radio-used" onclick="selectRadio('used')">
+            <span id="radio-used-dot" style="margin-right:6px;">●</span> Occasion
+          </label>
+        </div>
+      </div>
+      <div class="input-group">
+        <label class="input-label">Description</label>
+        <textarea class="input textarea" placeholder="Decrivez l'etat du livre..." id="add-desc"></textarea>
+      </div>
+      <button class="btn btn-primary mb" id="add-btn" onclick="goTo('home-mybooks')">Publier mon livre</button>
+      <div style="height:16px;"></div>
+    </div>
+  </div>
+
+  <!-- ============ SUPPLIES ============ -->
+  <div class="screen" id="supplies">
+    <div class="status-bar"><span>9:41</span><span>📶 🔋</span></div>
+    <div class="header">
+      <span class="header-title">Fournitures scolaires</span>
+    </div>
+    <div class="screen-scroll">
+      <div class="p">
+        <div class="chips mb" style="overflow-x:auto;flex-wrap:nowrap;">
+          <div class="chip active" onclick="toggleChip(this)">Tous</div>
+          <div class="chip" onclick="toggleChip(this)">Cahiers</div>
+          <div class="chip" onclick="toggleChip(this)">Stylos</div>
+          <div class="chip" onclick="toggleChip(this)">Sacs</div>
+          <div class="chip" onclick="toggleChip(this)">Autres</div>
+        </div>
+        <div class="card book-card">
+          <div class="book-card-img">📓</div>
+          <div class="book-card-info">
+            <div class="book-card-title">Cahier 200 pages grands carreaux</div>
+            <div class="book-card-author">Couverture rigide, broche</div>
+            <div class="supply-price">1 500 FCFA</div>
+            <div class="supply-supplier">Papeterie Centrale</div>
+          </div>
+        </div>
+        <div class="card book-card">
+          <div class="book-card-img">🎒</div>
+          <div class="book-card-info">
+            <div class="book-card-title">Sac a dos scolaire renferce</div>
+            <div class="book-card-author">Marque XYZ, 3 compartiments</div>
+            <div class="supply-price">12 000 FCFA</div>
+            <div class="supply-supplier">FourniPlus</div>
+          </div>
+        </div>
+        <div class="card book-card">
+          <div class="book-card-img">🖊️</div>
+          <div class="book-card-info">
+            <div class="book-card-title">Lot 10 stylos BIC bleu</div>
+            <div class="book-card-author">Pointe moyenne, encre classique</div>
+            <div class="supply-price">2 500 FCFA</div>
+            <div class="supply-supplier">Papeterie Centrale</div>
+          </div>
+        </div>
+        <div class="card book-card">
+          <div class="book-card-img">📐</div>
+          <div class="book-card-info">
+            <div class="book-card-title">Kit geometrie complet</div>
+            <div class="book-card-author">Regle, equerre, rapporteur, compas</div>
+            <div class="supply-price">3 000 FCFA</div>
+            <div class="supply-supplier">FourniPlus</div>
+          </div>
+        </div>
+        <div class="card book-card">
+          <div class="book-card-img">📁</div>
+          <div class="book-card-info">
+            <div class="book-card-title">Lot 5 protege-cahiers couleurs</div>
+            <div class="book-card-author">Format A4, plastique souple</div>
+            <div class="supply-price">1 000 FCFA</div>
+            <div class="supply-supplier">Papeterie Centrale</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="tab-bar">
+      <button class="tab-item" onclick="goTo('home-search')"><span class="tab-icon">🏠</span><span class="tab-label">Accueil</span></button>
+      <button class="tab-item active"><span class="tab-icon">📦</span><span class="tab-label">Fournitures</span></button>
+      <button class="tab-item" onclick="goTo('notifications')"><span class="tab-icon">🔔</span><span class="tab-label">Notifs</span><span class="tab-badge">3</span></button>
+      <button class="tab-item" onclick="goTo('profile')"><span class="tab-icon">👤</span><span class="tab-label">Profil</span></button>
+    </div>
+  </div>
+
+  <!-- ============ NOTIFICATIONS ============ -->
+  <div class="screen" id="notifications">
+    <div class="status-bar"><span>9:41</span><span>📶 🔋</span></div>
+    <div class="header">
+      <span class="header-title">Notifications</span>
+      <div class="header-right"><button class="btn-text" style="font-size:12px;">Tout lire</button></div>
+    </div>
+    <div class="state-bar">
+      <button class="state-btn active" onclick="setNotifState('normal')">Normal</button>
+      <button class="state-btn" onclick="setNotifState('empty')">Vide</button>
+    </div>
+    <div class="screen-scroll" id="notif-scroll">
+      <!-- NORMAL -->
+      <div id="notif-normal">
+        <div class="notif-item unread" onclick="goTo('book-detail')">
+          <div class="notif-dot"></div>
+          <div class="notif-content">
+            <div class="notif-text"><strong>Amadou D.</strong> est interesse par votre livre <strong>"Maths 6eme"</strong></div>
+            <div class="notif-time">Il y a 2 heures</div>
+          </div>
+        </div>
+        <div class="notif-item unread">
+          <div class="notif-dot"></div>
+          <div class="notif-content">
+            <div class="notif-text">Votre demande pour <strong>"Physique Terminale"</strong> a ete <strong style="color:var(--success)">acceptee</strong></div>
+            <div class="notif-time">Il y a 5 heures</div>
+          </div>
+        </div>
+        <div class="notif-item unread">
+          <div class="notif-dot"></div>
+          <div class="notif-content">
+            <div class="notif-text"><strong>Fanta B.</strong> est interessee par votre livre <strong>"Francais 5eme"</strong></div>
+            <div class="notif-time">Hier</div>
+          </div>
+        </div>
+        <div class="notif-item">
+          <div class="notif-dot read"></div>
+          <div class="notif-content">
+            <div class="notif-text">Votre demande pour <strong>"SVT 3eme"</strong> est <strong style="color:var(--warning)">en cours de traitement</strong></div>
+            <div class="notif-time">Il y a 2 jours</div>
+          </div>
+        </div>
+        <div class="notif-item">
+          <div class="notif-dot read"></div>
+          <div class="notif-content">
+            <div class="notif-text">Bienvenue sur <strong>BookSwap</strong> ! Commencez par rechercher ou proposer un livre.</div>
+            <div class="notif-time">Il y a 1 semaine</div>
+          </div>
+        </div>
+      </div>
+      <!-- EMPTY -->
+      <div id="notif-empty" style="display:none;">
+        <div class="empty-state" style="padding-top:80px;">
+          <div class="icon">🔕</div>
+          <h3>Aucune notification</h3>
+          <p>Vous serez notifie lorsque quelqu'un s'interessera a vos livres.</p>
+        </div>
+      </div>
+    </div>
+    <div class="tab-bar">
+      <button class="tab-item" onclick="goTo('home-search')"><span class="tab-icon">🏠</span><span class="tab-label">Accueil</span></button>
+      <button class="tab-item" onclick="goTo('supplies')"><span class="tab-icon">📦</span><span class="tab-label">Fournitures</span></button>
+      <button class="tab-item active"><span class="tab-icon">🔔</span><span class="tab-label">Notifs</span></button>
+      <button class="tab-item" onclick="goTo('profile')"><span class="tab-icon">👤</span><span class="tab-label">Profil</span></button>
+    </div>
+  </div>
+
+  <!-- ============ PROFILE ============ -->
+  <div class="screen" id="profile">
+    <div class="status-bar"><span>9:41</span><span>📶 🔋</span></div>
+    <div class="header">
+      <span class="header-title">Mon profil</span>
+      <div class="header-right"><button class="header-action">⚙️</button></div>
+    </div>
+    <div class="screen-scroll">
+      <div class="profile-header">
+        <div class="avatar">AD</div>
+        <div class="profile-name">Amadou Diallo</div>
+        <div class="profile-email">amadou@example.com</div>
+      </div>
+      <div class="px mb">
+        <div style="border-radius:12px;overflow:hidden;">
+          <div class="menu-item" onclick="goTo('home-mybooks')">
+            <span class="menu-icon">📖</span>
+            <span class="menu-label">Mes livres</span>
+            <span class="menu-arrow">›</span>
+          </div>
+          <div class="menu-item">
+            <span class="menu-icon">📋</span>
+            <span class="menu-label">Mes demandes</span>
+            <span class="menu-arrow">›</span>
+          </div>
+          <div class="menu-item">
+            <span class="menu-icon">✏️</span>
+            <span class="menu-label">Modifier mon profil</span>
+            <span class="menu-arrow">›</span>
+          </div>
+        </div>
+      </div>
+      <div class="px mb">
+        <div style="border-radius:12px;overflow:hidden;">
+          <div class="menu-item">
+            <span class="menu-icon">🌙</span>
+            <span class="menu-label">Theme sombre</span>
+            <button class="menu-toggle" id="profile-theme-toggle" onclick="toggleTheme();toggleProfileToggle()"></button>
+          </div>
+          <div class="menu-item">
+            <span class="menu-icon">🔔</span>
+            <span class="menu-label">Notifications</span>
+            <button class="menu-toggle on" onclick="this.classList.toggle('on');this.classList.toggle('off')"></button>
+          </div>
+        </div>
+      </div>
+      <div class="px mb-lg">
+        <button class="btn btn-danger" onclick="goTo('login')">Se deconnecter</button>
+      </div>
+    </div>
+    <div class="tab-bar">
+      <button class="tab-item" onclick="goTo('home-search')"><span class="tab-icon">🏠</span><span class="tab-label">Accueil</span></button>
+      <button class="tab-item" onclick="goTo('supplies')"><span class="tab-icon">📦</span><span class="tab-label">Fournitures</span></button>
+      <button class="tab-item" onclick="goTo('notifications')"><span class="tab-icon">🔔</span><span class="tab-label">Notifs</span><span class="tab-badge">3</span></button>
+      <button class="tab-item active"><span class="tab-icon">👤</span><span class="tab-label">Profil</span></button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ── Navigation ──
+function goTo(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const screen = document.getElementById(id);
+  if (screen) screen.classList.add('active');
+  document.getElementById('screenSelect').value = id;
+}
+
+// ── Theme ──
+let isDark = false;
+function toggleTheme() {
+  isDark = !isDark;
+  document.getElementById('phone').classList.toggle('dark', isDark);
+  document.getElementById('themeBtn').textContent = isDark ? '☀️ Clair' : '🌙 Sombre';
+  updateProfileToggle();
+}
+function updateProfileToggle() {
+  const t = document.getElementById('profile-theme-toggle');
+  if (t) { t.classList.toggle('on', isDark); t.classList.toggle('off', !isDark); }
+}
+function toggleProfileToggle() { updateProfileToggle(); }
+
+// ── Onboarding ──
+const onboardData = [
+  { icon:'🔍', title:'Trouvez vos livres', desc:'Recherchez des livres scolaires par niveau, classe ou mot-cle. Des milliers de livres disponibles pres de chez vous.' },
+  { icon:'🤝', title:'Echangez facilement', desc:'Proposez vos anciens livres et trouvez ceux dont vous avez besoin. L\'equipe BookSwap facilite chaque echange en toute securite.' },
+  { icon:'📦', title:'Fournitures scolaires', desc:'Retrouvez cahiers, stylos et sacs aupres de fournisseurs partenaires. Tout pour la rentree en un seul endroit.' }
+];
+let onboardIdx = 0;
+function nextOnboard() {
+  onboardIdx++;
+  if (onboardIdx >= 3) { goTo('login'); onboardIdx = 0; return; }
+  document.getElementById('onboard-icon').textContent = onboardData[onboardIdx].icon;
+  document.getElementById('onboard-title').textContent = onboardData[onboardIdx].title;
+  document.getElementById('onboard-desc').textContent = onboardData[onboardIdx].desc;
+  document.querySelectorAll('.onboarding-dot').forEach((d,i) => {
+    d.classList.toggle('active', i === onboardIdx);
+    d.style.width = i === onboardIdx ? '24px' : '8px';
+  });
+}
+
+// ── Toggle chips ──
+function toggleChip(el) { el.classList.toggle('active'); }
+
+// ── Toggle password ──
+function togglePw(el) {
+  const input = el.parentElement.querySelector('input');
+  input.type = input.type === 'password' ? 'text' : 'password';
+  el.textContent = input.type === 'password' ? '👁' : '🔒';
+}
+
+// ── Modals ──
+function showModal(id) { document.getElementById(id).classList.add('show'); }
+function hideModal(id) { document.getElementById(id).classList.remove('show'); }
+
+// ── Login states ──
+function setLoginState(state) {
+  document.querySelectorAll('#login .state-btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  const err = document.getElementById('login-error');
+  const btn = document.getElementById('login-btn');
+  err.classList.remove('show');
+  btn.disabled = false;
+  btn.textContent = 'Se connecter';
+  document.getElementById('login-email').classList.remove('input-error');
+  document.getElementById('login-password').classList.remove('input-error');
+  if (state === 'error') {
+    err.classList.add('show');
+    document.getElementById('login-email').classList.add('input-error');
+    document.getElementById('login-password').classList.add('input-error');
+  }
+  if (state === 'loading') { btn.disabled = true; btn.textContent = '⏳ Connexion...'; }
+}
+
+// ── Register states ──
+function setRegState(state) {
+  document.querySelectorAll('#register .state-btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  const emailErr = document.getElementById('reg-email-err');
+  const phoneErr = document.getElementById('reg-phone-err');
+  const btn = document.getElementById('reg-btn');
+  emailErr.style.display = 'none'; phoneErr.style.display = 'none';
+  document.getElementById('reg-email').classList.remove('input-error');
+  document.getElementById('reg-phone').classList.remove('input-error');
+  btn.disabled = false; btn.textContent = "S'inscrire";
+  if (state === 'error') {
+    emailErr.style.display = 'block'; phoneErr.style.display = 'block';
+    document.getElementById('reg-email').classList.add('input-error');
+    document.getElementById('reg-phone').classList.add('input-error');
+  }
+  if (state === 'loading') { btn.disabled = true; btn.textContent = "⏳ Inscription..."; }
+}
+
+// ── OTP states ──
+function setOtpState(state) {
+  document.querySelectorAll('#verify-otp .state-btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  const boxes = document.querySelectorAll('.otp-box');
+  const timer = document.getElementById('otp-timer');
+  const errMsg = document.getElementById('otp-error-msg');
+  const successMsg = document.getElementById('otp-success-msg');
+  const btn = document.getElementById('otp-btn');
+  const resend = document.getElementById('otp-resend');
+  const cooldown = document.getElementById('otp-cooldown');
+
+  boxes.forEach(b => { b.value = ''; b.classList.remove('filled','error'); });
+  timer.style.display = 'block'; errMsg.style.display = 'none'; successMsg.style.display = 'none';
+  btn.style.display = 'flex'; btn.disabled = false; btn.textContent = 'Verifier';
+  resend.style.opacity = '0.5'; resend.style.pointerEvents = 'none';
+  cooldown.style.display = 'block';
+  timer.innerHTML = 'Expire dans <strong style="color:var(--primary)">4:32</strong>';
+
+  if (state === 'filled') {
+    boxes[0].value = '4'; boxes[1].value = '8'; boxes[2].value = '3'; boxes[3].value = '7';
+    boxes.forEach(b => b.classList.add('filled'));
+  }
+  if (state === 'error') {
+    boxes[0].value = '4'; boxes[1].value = '8'; boxes[2].value = '2'; boxes[3].value = '1';
+    boxes.forEach(b => b.classList.add('error'));
+    errMsg.textContent = 'Code incorrect. 3 tentatives restantes.';
+    errMsg.style.display = 'block';
+  }
+  if (state === 'expired') {
+    timer.innerHTML = '<strong style="color:var(--danger)">Code expire</strong>';
+    errMsg.textContent = 'Votre code a expire. Demandez un nouveau code.';
+    errMsg.style.display = 'block';
+    btn.disabled = true;
+    resend.style.opacity = '1'; resend.style.pointerEvents = 'auto';
+    cooldown.style.display = 'none';
+  }
+  if (state === 'success') {
+    boxes[0].value = '4'; boxes[1].value = '8'; boxes[2].value = '3'; boxes[3].value = '7';
+    boxes.forEach(b => { b.classList.add('filled'); b.style.borderColor = 'var(--success)'; });
+    timer.style.display = 'none';
+    successMsg.style.display = 'flex';
+    btn.style.display = 'none';
+    resend.style.display = 'none';
+    cooldown.style.display = 'none';
+  }
+}
+
+// ── Home states ──
+function setHomeState(state) {
+  document.querySelectorAll('#home-search .state-btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById('home-normal').style.display = state==='normal'?'block':'none';
+  document.getElementById('home-loading').style.display = state==='loading'?'block':'none';
+  document.getElementById('home-empty').style.display = state==='empty'?'block':'none';
+  document.getElementById('home-error').style.display = state==='error'?'block':'none';
+}
+
+// ── MyBooks states ──
+function setMyBooksState(state) {
+  document.querySelectorAll('#home-mybooks .state-btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById('mybooks-normal').style.display = state==='normal'?'block':'none';
+  document.getElementById('mybooks-empty').style.display = state==='empty'?'block':'none';
+}
+
+// ── Detail states ──
+function setDetailState(state) {
+  document.querySelectorAll('#book-detail .state-btn').forEach(b => b.classList.remove('active'));
+  if(event && event.target) event.target.classList.add('active');
+  const btn = document.getElementById('detail-btn');
+  const actions = document.getElementById('detail-actions');
+  actions.style.display = 'block';
+  btn.onclick = function(){ showModal('confirm-modal'); };
+  if (state === 'available') { btn.textContent = 'Je veux ce livre'; btn.disabled = false; btn.className = 'btn btn-primary'; }
+  if (state === 'requested') { btn.textContent = 'Demande envoyee ✓'; btn.disabled = true; btn.className = 'btn btn-primary'; }
+  if (state === 'reserved') { btn.textContent = 'Ce livre n\'est plus disponible'; btn.disabled = true; btn.className = 'btn btn-primary'; }
+  if (state === 'owner') {
+    actions.innerHTML = '<div style="display:flex;gap:12px;"><button class="btn btn-secondary" style="flex:1">Modifier</button><button class="btn btn-danger" style="flex:1">Supprimer</button></div>';
+  } else {
+    actions.innerHTML = '<button class="btn btn-primary" id="detail-btn">Je veux ce livre</button>';
+    setDetailState.skipRecurse = true;
+    // re-apply state to new button
+    const b2 = document.getElementById('detail-btn');
+    if(state==='available'){b2.textContent='Je veux ce livre';b2.disabled=false;b2.onclick=function(){showModal('confirm-modal');};}
+    if(state==='requested'){b2.textContent='Demande envoyee ✓';b2.disabled=true;}
+    if(state==='reserved'){b2.textContent='Ce livre n\'est plus disponible';b2.disabled=true;}
+  }
+}
+
+// ── Add book states ──
+function setAddState(state) {
+  document.querySelectorAll('#add-book .state-btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  const zone = document.getElementById('add-photo-zone');
+  const icon = document.getElementById('add-photo-icon');
+  const text = document.getElementById('add-photo-text');
+  const title = document.getElementById('add-title');
+  const author = document.getElementById('add-author');
+  const btn = document.getElementById('add-btn');
+
+  zone.style.border = '2px dashed var(--border)';
+  zone.style.background = 'var(--surface)';
+  icon.textContent = '📷'; text.textContent = 'Ajouter une photo de couverture';
+  title.value = ''; author.value = '';
+  btn.disabled = true;
+
+  if (state === 'filled') {
+    title.value = 'Physique-Chimie Terminale S';
+    author.value = 'Hachette';
+    document.getElementById('add-level').selectedIndex = 12;
+    document.getElementById('add-desc').value = 'Jamais utilise, encore emballe.';
+    btn.disabled = false;
+  }
+  if (state === 'photo') {
+    zone.style.border = '2px solid var(--success)';
+    zone.style.background = 'var(--success-light)';
+    icon.textContent = '✅'; text.textContent = 'photo_livre.jpg - 2.3 Mo';
+    title.value = 'Physique-Chimie Terminale S';
+    author.value = 'Hachette';
+    document.getElementById('add-level').selectedIndex = 12;
+    document.getElementById('add-desc').value = 'Jamais utilise, encore emballe.';
+    btn.disabled = false;
+  }
+}
+
+// ── Notification states ──
+function setNotifState(state) {
+  document.querySelectorAll('#notifications .state-btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById('notif-normal').style.display = state==='normal'?'block':'none';
+  document.getElementById('notif-empty').style.display = state==='empty'?'block':'none';
+}
+
+// ── Radio buttons (add book) ──
+function selectRadio(val) {
+  const rn = document.getElementById('radio-new');
+  const ru = document.getElementById('radio-used');
+  if (val === 'new') {
+    rn.style.borderColor = 'var(--primary)'; rn.style.color = 'var(--primary)'; rn.style.background = 'var(--primary-light)';
+    ru.style.borderColor = 'var(--border)'; ru.style.color = 'var(--text-secondary)'; ru.style.background = 'var(--surface)';
+    document.getElementById('radio-new-dot').textContent = '●';
+    document.getElementById('radio-used-dot').textContent = '○';
+  } else {
+    ru.style.borderColor = 'var(--primary)'; ru.style.color = 'var(--primary)'; ru.style.background = 'var(--primary-light)';
+    rn.style.borderColor = 'var(--border)'; rn.style.color = 'var(--text-secondary)'; rn.style.background = 'var(--surface)';
+    document.getElementById('radio-used-dot').textContent = '●';
+    document.getElementById('radio-new-dot').textContent = '○';
+  }
+}
+
+// ── OTP input auto-focus ──
+document.querySelectorAll('.otp-box').forEach((box, i, boxes) => {
+  box.addEventListener('input', () => {
+    if (box.value.length === 1 && i < boxes.length - 1) boxes[i+1].focus();
+    box.classList.toggle('filled', box.value.length > 0);
+  });
+  box.addEventListener('keydown', (e) => {
+    if (e.key === 'Backspace' && !box.value && i > 0) boxes[i-1].focus();
+  });
+});
+
+// ── Init ──
+updateProfileToggle();
+</script>
+</body>
+</html>
