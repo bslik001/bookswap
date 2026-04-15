@@ -16,6 +16,7 @@ export const sendSms = async (to: string, message: string): Promise<void> => {
   await AfricasTalking.SMS.send({
     to: [to],
     message,
-    from: env.AT_SENDER_ID,
+    // Sender ID omis tant qu'il n'est pas approuve par l'operateur
+    // Decommenter apres approbation : from: env.AT_SENDER_ID,
   });
 };
