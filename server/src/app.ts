@@ -5,6 +5,7 @@ import { globalLimiter } from './middleware/rateLimiter';
 import { errorHandler, AppError } from './middleware/errorHandler';
 import authRoutes from './modules/auth/auth.routes';
 import userRoutes, { adminUserRouter } from './modules/user/user.routes';
+import bookRoutes from './modules/book/book.routes';
 
 const app = express();
 
@@ -23,7 +24,7 @@ app.get('/api/health', (_req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/admin/users', adminUserRouter);
-// app.use('/api/books', bookRoutes);
+app.use('/api/books', bookRoutes);
 // app.use('/api/requests', requestRoutes);
 // app.use('/api/supplies', supplyRoutes);
 // app.use('/api/notifications', notificationRoutes);
