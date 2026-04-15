@@ -6,6 +6,9 @@ import { errorHandler, AppError } from './middleware/errorHandler';
 import authRoutes from './modules/auth/auth.routes';
 import userRoutes, { adminUserRouter } from './modules/user/user.routes';
 import bookRoutes from './modules/book/book.routes';
+import requestRoutes, { adminRequestRouter } from './modules/request/request.routes';
+import supplyRoutes from './modules/supply/supply.routes';
+import notificationRoutes from './modules/notification/notification.routes';
 
 const app = express();
 
@@ -25,9 +28,10 @@ app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/admin/users', adminUserRouter);
 app.use('/api/books', bookRoutes);
-// app.use('/api/requests', requestRoutes);
-// app.use('/api/supplies', supplyRoutes);
-// app.use('/api/notifications', notificationRoutes);
+app.use('/api/requests', requestRoutes);
+app.use('/api/admin/requests', adminRequestRouter);
+app.use('/api/supplies', supplyRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // ── 404 pour routes non trouvees ──
 app.use((_req, _res, next) => {

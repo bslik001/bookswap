@@ -1,0 +1,32 @@
+import { env } from './env';
+
+// En dev, on log le push en console au lieu d'envoyer via FCM
+export const sendPushNotification = async (
+  fcmToken: string,
+  title: string,
+  body: string
+): Promise<void> => {
+  if (env.NODE_ENV === 'development') {
+    console.log(`\n🔔 [PUSH DEV] Token: ${fcmToken.slice(0, 20)}...`);
+    console.log(`   Titre: ${title}`);
+    console.log(`   Corps: ${body}\n`);
+    return;
+  }
+
+  const admin = require('firebase-admin');
+
+  if (!admin.apps.length) {
+    admin.initializeApp({
+      credential: admin.credential.cert({
+        projectId: env.FIREBASE_PROJECT_ID,
+        privateKey: env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
+        clientEmail: env.FIREBASE_CLIENT_EMAIL,
+      }),
+    });
+  }
+
+  await admin.messaging().send({
+    token: fcmToken,
+    notification: { title, body },
+  });
+};
