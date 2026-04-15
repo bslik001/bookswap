@@ -1,0 +1,172 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+  SUPPLIER
+}
+
+enum BookCondition {
+  NEW
+  USED
+}
+
+enum BookStatus {
+  AVAILABLE
+  RESERVED
+  EXCHANGED
+}
+
+enum RequestStatus {
+  PENDING
+  IN_PROGRESS
+  ACCEPTED
+  REFUSED
+  COMPLETED
+}
+
+enum SupplyType {
+  NOTEBOOK
+  PEN
+  BAG
+  OTHER
+}
+
+enum NotificationType {
+  BOOK_REQUEST
+  REQUEST_UPDATE
+  SUPPLIER_CONTACT
+  SYSTEM
+}
+
+model User {
+  id              String   @id @default(uuid()) @db.Uuid
+  firstName       String   @map("first_name") @db.VarChar(100)
+  lastName        String   @map("last_name") @db.VarChar(100)
+  email           String   @unique @db.VarChar(255)
+  password        String   @db.VarChar(255)
+  phone           String   @unique @db.VarChar(20)
+  address         String   @db.VarChar(500)
+  gradeInterests  String[] @map("grade_interests")
+  role            Role     @default(USER)
+  isActive        Boolean  @default(false) @map("is_active")
+  isPhoneVerified Boolean  @default(false) @map("is_phone_verified")
+  tokenVersion    Int      @default(0) @map("token_version")
+  fcmToken        String?  @map("fcm_token") @db.VarChar(500)
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  books           Book[]
+  requests        Request[]        @relation("Requester")
+  supplies        Supply[]
+  contactRequests ContactRequest[] @relation("ContactRequester")
+  notifications   Notification[]
+
+  @@map("users")
+}
+
+model Book {
+  id            String        @id @default(uuid()) @db.Uuid
+  title         String        @db.VarChar(255)
+  author        String?       @db.VarChar(255)
+  grade         String        @db.VarChar(100)
+  className     String?       @map("class_name") @db.VarChar(100)
+  condition     BookCondition
+  description   String?       @db.Text
+  imageUrl      String        @map("image_url") @db.VarChar(500)
+  imagePublicId String?       @map("image_public_id") @db.VarChar(255)
+  status        BookStatus    @default(AVAILABLE)
+  ownerId       String        @map("owner_id") @db.Uuid
+  createdAt     DateTime      @default(now()) @map("created_at")
+  updatedAt     DateTime      @updatedAt @map("updated_at")
+
+  owner    User      @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  requests Request[]
+
+  @@index([grade])
+  @@index([status])
+  @@index([ownerId])
+  @@map("books")
+}
+
+model Request {
+  id          String        @id @default(uuid()) @db.Uuid
+  bookId      String        @map("book_id") @db.Uuid
+  requesterId String        @map("requester_id") @db.Uuid
+  status      RequestStatus @default(PENDING)
+  adminNotes  String?       @map("admin_notes") @db.Text
+  createdAt   DateTime      @default(now()) @map("created_at")
+  updatedAt   DateTime      @updatedAt @map("updated_at")
+
+  book      Book @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  requester User @relation("Requester", fields: [requesterId], references: [id], onDelete: Cascade)
+
+  @@unique([bookId, requesterId])
+  @@index([status])
+  @@map("requests")
+}
+
+model Supply {
+  id          String     @id @default(uuid()) @db.Uuid
+  name        String     @db.VarChar(255)
+  type        SupplyType
+  description String?    @db.Text
+  imageUrl    String?    @map("image_url") @db.VarChar(500)
+  price       Decimal?   @db.Decimal(10, 2)
+  supplierId  String     @map("supplier_id") @db.Uuid
+  createdAt   DateTime   @default(now()) @map("created_at")
+  updatedAt   DateTime   @updatedAt @map("updated_at")
+
+  supplier        User             @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+  contactRequests ContactRequest[]
+
+  @@index([type])
+  @@index([supplierId])
+  @@map("supplies")
+}
+
+model ContactRequest {
+  id          String   @id @default(uuid()) @db.Uuid
+  supplyId    String   @map("supply_id") @db.Uuid
+  requesterId String   @map("requester_id") @db.Uuid
+  message     String?  @db.Text
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  supply    Supply @relation(fields: [supplyId], references: [id], onDelete: Cascade)
+  requester User   @relation("ContactRequester", fields: [requesterId], references: [id], onDelete: Cascade)
+
+  @@map("contact_requests")
+}
+
+model Notification {
+  id        String           @id @default(uuid()) @db.Uuid
+  userId    String           @map("user_id") @db.Uuid
+  type      NotificationType
+  content   String           @db.Text
+  isRead    Boolean          @default(false) @map("is_read")
+  createdAt DateTime         @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRead])
+  @@map("notifications")
+}
+
+model OtpVerification {
+  id        String   @id @default(uuid()) @db.Uuid
+  phone     String   @db.VarChar(20)
+  code      String   @db.VarChar(6)
+  attempts  Int      @default(0)
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([phone])
+  @@map("otp_verifications")
+}

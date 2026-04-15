@@ -3,6 +3,7 @@ import cors from 'cors';
 import { env } from './config/env';
 import { globalLimiter } from './middleware/rateLimiter';
 import { errorHandler, AppError } from './middleware/errorHandler';
+import authRoutes from './modules/auth/auth.routes';
 
 const app = express();
 
@@ -17,8 +18,8 @@ app.get('/api/health', (_req, res) => {
   res.json({ success: true, data: { status: 'ok' } });
 });
 
-// ── Routes API (seront ajoutees etape par etape) ──
-// app.use('/api/auth', authRoutes);
+// ── Routes API ──
+app.use('/api/auth', authRoutes);
 // app.use('/api/users', userRoutes);
 // app.use('/api/books', bookRoutes);
 // app.use('/api/requests', requestRoutes);
