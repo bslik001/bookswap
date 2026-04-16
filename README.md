@@ -10,6 +10,7 @@ Application mobile d'echange de livres scolaires. Les eleves et parents publient
 | [Cahier d'analyse](CAHIER_ANALYSE.md) | Analyse detaillee : cas d'utilisation, modele de donnees, regles de gestion |
 | [Cahier de conception](CAHIER_CONCEPTION.md) | Architecture technique, schema Prisma, contrats API, specs UI |
 | [Maquettes](maquettes.html) | 12 ecrans interactifs (ouvrir dans un navigateur en mode mobile) |
+| **API interactive** | Swagger UI disponible sur `/api/docs` une fois le serveur lance |
 
 ## Stack technique
 
@@ -17,54 +18,80 @@ Application mobile d'echange de livres scolaires. Les eleves et parents publient
 |--------|-------------|
 | **Backend** | Node.js, Express, TypeScript |
 | **ORM / BDD** | Prisma, PostgreSQL |
-| **Auth** | JWT (access 15min + refresh 7j), bcrypt, OTP SMS |
-| **Validation** | Zod |
+| **Auth** | JWT (access 15min + refresh 7j en base), bcrypt, OTP SMS |
+| **Validation** | Zod, validation UUID sur tous les params `:id` |
 | **Upload images** | Multer + Cloudinary |
 | **Notifications push** | Firebase Cloud Messaging |
 | **SMS** | Africa's Talking |
+| **Logging** | Pino (JSON en prod, pretty en dev) |
+| **Documentation API** | Swagger / OpenAPI 3.0 (swagger-jsdoc + swagger-ui-express) |
+| **Qualite de code** | ESLint + Prettier |
+| **CI/CD** | GitHub Actions (lint, build, prisma validate) |
+| **Containerisation** | Docker (multi-stage build) |
 | **Frontend** *(a venir)* | React Native + Expo |
 
 ## Structure du projet
 
 ```
 bookswap/
+├── .github/workflows/
+│   └── ci.yml                       # Lint → Build → Prisma validate
 ├── CAHIER_ANALYSE.md
 ├── CAHIER_CONCEPTION.md
 ├── maquettes.html
 └── server/
+    ├── .eslintrc.json               # ESLint v8 + @typescript-eslint + Prettier
+    ├── .prettierrc                   # Semi, singleQuote, trailingComma: all
+    ├── Dockerfile                   # Multi-stage : build → production
+    ├── .dockerignore
     ├── prisma/
-    │   ├── schema.prisma            # 7 modeles, 6 enums
+    │   ├── schema.prisma            # 8 modeles, 6 enums
     │   └── migrations/
     │       ├── 20260415_init/
-    │       └── 20260415_add_search_vector/   # tsvector + index GIN
+    │       ├── 20260415_add_search_vector/       # tsvector + index GIN
+    │       ├── 20260416_add_userid_to_otp/       # Lien OTP → User
+    │       ├── 20260416_add_composite_index/     # Index (status, grade, condition)
+    │       └── 20260416_add_refresh_tokens/      # Table refresh_tokens
     └── src/
         ├── index.ts                 # Point d'entree
-        ├── app.ts                   # Express : CORS, rate limiter, routes, error handler
+        ├── app.ts                   # Express : CORS, rate limiter, Swagger UI, routes
         ├── config/
         │   ├── env.ts               # Validation Zod des variables d'environnement
+        │   ├── logger.ts            # Pino : JSON en prod, pino-pretty en dev
+        │   ├── swagger.ts           # OpenAPI 3.0 spec (28 endpoints documentes)
         │   ├── cloudinary.ts        # SDK Cloudinary
-        │   ├── africastalking.ts    # SMS (log en console en dev)
-        │   └── firebase.ts          # Push FCM (log en console en dev)
+        │   ├── africastalking.ts    # SMS (log en dev, envoi reel en prod)
+        │   └── firebase.ts          # Push FCM (log en dev, envoi reel en prod)
         ├── lib/
         │   └── prisma.ts            # Singleton PrismaClient
         ├── middleware/
         │   ├── errorHandler.ts      # AppError, Zod, Prisma → format JSON standard
         │   ├── auth.ts              # authenticate (JWT) + authorize (roles)
         │   ├── validate.ts          # Factory Zod pour body/query/params
+        │   ├── validateId.ts        # Validation UUID sur tous les params :id
         │   ├── rateLimiter.ts       # Global (100/min) + factory custom
         │   └── upload.ts            # Multer memory, 5 Mo, JPEG/PNG
         ├── utils/
-        │   ├── jwt.ts               # Access token (15min), refresh token (7j)
+        │   ├── jwt.ts               # Access token (15min), refresh token (7j), hashToken
         │   ├── password.ts          # bcrypt 12 rounds
         │   ├── otp.ts               # Code 4 chiffres, expiration, masquage
         │   ├── pagination.ts        # paginate(), buildMeta()
         │   ├── cloudinary.ts        # uploadImage(), deleteImage()
         │   └── asyncHandler.ts      # Wrapper try/catch pour controllers
         ├── types/
-        │   └── express.d.ts         # Extend Request avec user
+        │   ├── express.d.ts         # Extend Request avec user
+        │   └── africastalking.d.ts  # Types Africa's Talking SDK
+        ├── docs/                    # Swagger/OpenAPI annotations
+        │   ├── auth.ts
+        │   ├── users.ts
+        │   ├── books.ts
+        │   ├── requests.ts
+        │   ├── supplies.ts
+        │   ├── notifications.ts
+        │   └── admin.ts
         └── modules/
-            ├── auth/                # Inscription, OTP, login, refresh
-            ├── user/                # Profil, admin (list, block)
+            ├── auth/                # Inscription, OTP, login, refresh, logout, passwords
+            ├── user/                # Profil, suppression compte, admin (list, block, stats)
             ├── book/                # CRUD, full-text search, upload
             ├── request/             # Demandes, transitions de statut
             ├── supply/              # Fournitures, contact fournisseur
@@ -73,15 +100,21 @@ bookswap/
 
 ## Base de donnees
 
-**7 modeles :** User, Book, Request, Supply, ContactRequest, Notification, OtpVerification
+**8 modeles :** User, Book, Request, Supply, ContactRequest, Notification, OtpVerification, RefreshToken
 
 **Fonctionnalites notables :**
 - Recherche full-text en francais (`tsvector` + index GIN sur titre et auteur des livres)
+- Index composite `(status, grade, condition)` sur les livres pour les filtres frequents
 - Contrainte d'unicite `@@unique([bookId, requesterId])` sur les demandes (RG-04)
-- `tokenVersion` sur User pour invalider les refresh tokens au blocage
+- Refresh tokens stockes en base (hash SHA-256) avec rotation et detection de replay
+- `tokenVersion` sur User pour revoquer tous les tokens d'un utilisateur
 - `isActive` / `isPhoneVerified` pour le flux d'inscription avec OTP
+- OTP lie au User (`userId` sur OtpVerification) pour tracabilite
 
-## API — 28 endpoints
+## API — 34 endpoints
+
+> Documentation interactive Swagger UI disponible sur `/api/docs`
+> Spec JSON telechargeable sur `/api/docs.json`
 
 ### Authentification
 
@@ -91,7 +124,11 @@ bookswap/
 | POST | `/api/auth/verify-otp` | Verification du code OTP, active le compte | 5 / 15min |
 | POST | `/api/auth/resend-otp` | Renvoyer le code (cooldown 60s, max 3/h) | 2 / min |
 | POST | `/api/auth/login` | Connexion, retourne les tokens JWT | 5 / min |
-| POST | `/api/auth/refresh-token` | Renouveler la paire de tokens | - |
+| POST | `/api/auth/refresh-token` | Renouveler les tokens (rotation automatique) | - |
+| POST | `/api/auth/logout` | Revoquer le refresh token (ou tous) | Auth |
+| PUT | `/api/auth/change-password` | Changer de mot de passe (invalide les tokens) | Auth |
+| POST | `/api/auth/forgot-password` | Envoi OTP de reinitialisation (reponse opaque) | - |
+| POST | `/api/auth/reset-password` | Reinitialiser le mot de passe via OTP | - |
 
 ### Utilisateurs
 
@@ -99,6 +136,7 @@ bookswap/
 |---------|----------|-------------|------|
 | GET | `/api/users/me` | Mon profil complet | User |
 | PUT | `/api/users/me` | Modifier mon profil / FCM token | User |
+| DELETE | `/api/users/me` | Supprimer mon compte (verification mot de passe) | User |
 | GET | `/api/users/:id` | Profil public (nom tronque : "Diallo" → "D.") | User |
 
 ### Livres
@@ -141,10 +179,18 @@ bookswap/
 
 | Methode | Endpoint | Description | Auth |
 |---------|----------|-------------|------|
+| GET | `/api/admin/users/stats` | Statistiques globales (users, books, requests, supplies) | Admin |
 | GET | `/api/admin/users` | Liste utilisateurs (filtre role, search) | Admin |
 | PUT | `/api/admin/users/:id/block` | Bloquer/debloquer (invalide les tokens) | Admin |
 | GET | `/api/admin/requests` | Toutes les demandes (coordonnees completes) | Admin |
 | PUT | `/api/admin/requests/:id` | Changer le statut (transitions controlees) | Admin |
+
+### Health checks
+
+| Methode | Endpoint | Description | Auth |
+|---------|----------|-------------|------|
+| GET | `/api/health` | Statut de l'API | - |
+| GET | `/api/health/ready` | Readiness (teste la connexion PostgreSQL) | - |
 
 ### Transitions de statut des demandes
 
@@ -215,7 +261,7 @@ npm install
 | `AT_USERNAME` | Africa's Talking username |
 | `AT_SENDER_ID` | SMS Sender ID (doit etre approuve par l'operateur) |
 | `PORT` | Port du serveur (defaut: 3000) |
-| `NODE_ENV` | `development` / `production` |
+| `NODE_ENV` | `development` / `production` / `test` |
 | `CORS_ORIGIN` | Origine autorisee pour CORS |
 
 ### Base de donnees
@@ -240,29 +286,67 @@ npm run dev
 # Production
 npm run build
 npm start
+
+# Docker
+docker build -t bookswap-api .
+docker run -p 3000:3000 --env-file .env bookswap-api
+```
+
+### Qualite de code
+
+```bash
+# Linter
+npm run lint
+npm run lint:fix
+
+# Formattage
+npm run format
 ```
 
 ### Verification
 
 ```bash
+# Health check basique
 curl http://localhost:3000/api/health
 # → {"success":true,"data":{"status":"ok"}}
+
+# Readiness (teste PostgreSQL)
+curl http://localhost:3000/api/health/ready
+# → {"success":true,"data":{"status":"ready","database":"connected"}}
+
+# Documentation API interactive
+open http://localhost:3000/api/docs
 ```
 
 ## Mode developpement
 
 En `NODE_ENV=development` :
-- Les **SMS OTP** sont logues en console au lieu d'etre envoyes
-- Les **notifications push** sont loguees en console au lieu de passer par FCM
+- Les **SMS OTP** sont logues via pino au lieu d'etre envoyes
+- Les **notifications push** sont loguees via pino au lieu de passer par FCM
 - Les **erreurs 500** incluent la stack trace dans la reponse
+- Les **logs** sont affiches en format lisible (pino-pretty) au lieu de JSON
 
 ## Securite
 
 - Mots de passe hashes avec bcrypt (12 rounds)
 - JWT access token expire en 15 minutes
-- `tokenVersion` sur User pour revoquer tous les refresh tokens d'un utilisateur
+- Refresh tokens stockes en base (hash SHA-256), rotation automatique a chaque utilisation
+- Detection de replay : reutilisation d'un ancien refresh token → revocation de tous les tokens de l'utilisateur
+- `tokenVersion` sur User pour revoquer globalement les tokens (blocage, changement de mot de passe)
+- Validation UUID sur tous les parametres `:id` des routes (middleware `validateId`)
 - Rate limiting global (100 req/min) + par endpoint (register, login, OTP)
 - Validation Zod sur toutes les entrees (body, query, params)
 - Upload : JPEG/PNG uniquement, 5 Mo max, stockage memoire (pas de fichier temporaire)
 - Profils publics : nom de famille tronque ("D."), pas de telephone ni adresse
 - Routes admin protegees par middleware `authorize('ADMIN')`
+- Forgot password : reponse opaque (ne revele pas si le numero existe)
+
+## CI/CD
+
+Le pipeline GitHub Actions s'execute sur chaque push et PR vers `main` :
+
+1. **npm ci** — installation des dependances
+2. **prisma generate** — generation du client Prisma
+3. **npm run lint** — ESLint (zero warnings autorise)
+4. **npx tsc --noEmit** — verification TypeScript
+5. **npx prisma validate** — validation du schema Prisma
