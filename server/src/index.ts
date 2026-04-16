@@ -1,8 +1,7 @@
 import app from './app';
 import { env } from './config/env';
+import { logger } from './config/logger';
 
 app.listen(env.PORT, () => {
-  console.log(`🚀 BookSwap API demarree sur le port ${env.PORT}`);
-  console.log(`   Environnement: ${env.NODE_ENV}`);
-  console.log(`   Health check:  http://localhost:${env.PORT}/api/health`);
+  logger.info({ port: env.PORT, env: env.NODE_ENV }, 'BookSwap API demarree');
 });

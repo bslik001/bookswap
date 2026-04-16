@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { ZodError } from 'zod';
 import { env } from '../config/env';
+import { logger } from '../config/logger';
 
 export class AppError extends Error {
   constructor(
@@ -68,7 +69,7 @@ export const errorHandler = (err: Error, _req: Request, res: Response, _next: Ne
   }
 
   // Erreur generique
-  console.error('Erreur non geree:', err);
+  logger.error({ err }, 'Erreur non geree');
   res.status(500).json({
     success: false,
     error: {

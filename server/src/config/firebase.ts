@@ -1,4 +1,5 @@
 import { env } from './env';
+import { logger } from './logger';
 
 // En dev, on log le push en console au lieu d'envoyer via FCM
 export const sendPushNotification = async (
@@ -7,9 +8,7 @@ export const sendPushNotification = async (
   body: string
 ): Promise<void> => {
   if (env.NODE_ENV === 'development') {
-    console.log(`\n🔔 [PUSH DEV] Token: ${fcmToken.slice(0, 20)}...`);
-    console.log(`   Titre: ${title}`);
-    console.log(`   Corps: ${body}\n`);
+    logger.info({ token: fcmToken.slice(0, 20), title, body }, '[PUSH DEV] Notification');
     return;
   }
 

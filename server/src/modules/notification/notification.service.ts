@@ -1,6 +1,7 @@
 import { prisma } from '../../lib/prisma';
 import { sendPushNotification } from '../../config/firebase';
 import { paginate, buildMeta } from '../../utils/pagination';
+import { logger } from '../../config/logger';
 import type { NotificationType } from '@prisma/client';
 
 // ── Creer une notification (DB + push optionnel) ──
@@ -24,7 +25,7 @@ export const createNotification = async (
       await sendPushNotification(user.fcmToken, 'BookSwap', content);
     } catch (err) {
       // Le push est best-effort, on ne bloque pas si ca echoue
-      console.error('Push notification echouee:', err);
+      logger.error({ err, userId }, 'Push notification echouee');
     }
   }
 

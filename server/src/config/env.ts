@@ -35,8 +35,9 @@ const envSchema = z.object({
 const parsed = envSchema.safeParse(process.env);
 
 if (!parsed.success) {
-  console.error('❌ Variables d\'environnement invalides:');
-  console.error(parsed.error.flatten().fieldErrors);
+  // Logger not available yet (depends on env), use stderr directly
+  process.stderr.write('Variables d\'environnement invalides:\n');
+  process.stderr.write(JSON.stringify(parsed.error.flatten().fieldErrors, null, 2) + '\n');
   process.exit(1);
 }
 

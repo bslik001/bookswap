@@ -1,10 +1,10 @@
 import { env } from './env';
+import { logger } from './logger';
 
 // En dev, on log l'OTP en console au lieu d'envoyer un SMS
 export const sendSms = async (to: string, message: string): Promise<void> => {
   if (env.NODE_ENV === 'development') {
-    console.log(`\n📱 [SMS DEV] Destinataire: ${to}`);
-    console.log(`   Message: ${message}\n`);
+    logger.info({ to, message }, '[SMS DEV] OTP envoye');
     return;
   }
 
