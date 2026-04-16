@@ -1,3 +1,4 @@
+import admin from 'firebase-admin';
 import { env } from './env';
 import { logger } from './logger';
 
@@ -11,8 +12,6 @@ export const sendPushNotification = async (
     logger.info({ token: fcmToken.slice(0, 20), title, body }, '[PUSH DEV] Notification');
     return;
   }
-
-  const admin = require('firebase-admin');
 
   if (!admin.apps.length) {
     admin.initializeApp({

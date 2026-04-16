@@ -1,3 +1,4 @@
+import AfricasTalkingSDK from 'africastalking';
 import { env } from './env';
 import { logger } from './logger';
 
@@ -8,12 +9,12 @@ export const sendSms = async (to: string, message: string): Promise<void> => {
     return;
   }
 
-  const AfricasTalking = require('africastalking')({
+  const at = AfricasTalkingSDK({
     apiKey: env.AT_API_KEY,
     username: env.AT_USERNAME,
   });
 
-  await AfricasTalking.SMS.send({
+  await at.SMS.send({
     to: [to],
     message,
     // Sender ID omis tant qu'il n'est pas approuve par l'operateur
