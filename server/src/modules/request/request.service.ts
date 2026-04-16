@@ -99,7 +99,8 @@ export const listAllRequests = async (query: ListRequestsInput) => {
   const { page, limit, status } = query;
   const { skip, take } = paginate(page, limit);
 
-  const where: any = {};
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const where: Record<string, any> = {};
   if (status) where.status = status;
 
   const [requests, total] = await Promise.all([

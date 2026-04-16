@@ -118,7 +118,8 @@ export const listBooks = async (query: ListBooksInput, currentUserId: string) =>
   }
 
   // Sinon, filtres Prisma classiques
-  const where: any = {};
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const where: Record<string, any> = {};
   if (grade) where.grade = grade;
   if (condition) where.condition = condition;
   if (status) where.status = status;
@@ -156,7 +157,7 @@ async function listBooksFullText(
   opts: { grade?: string; condition?: string; status?: string; skip: number; take: number; page: number; limit: number; currentUserId: string }
 ) {
   const conditions: string[] = [`search_vector @@ plainto_tsquery('french', $1)`];
-  const params: any[] = [search];
+  const params: (string | number)[] = [search];
   let paramIndex = 2;
 
   if (opts.grade) {
@@ -183,7 +184,7 @@ async function listBooksFullText(
   );
   const total = Number(countResult[0].count);
 
-  const books = await prisma.$queryRawUnsafe<any[]>(
+  const books = await prisma.$queryRawUnsafe<Record<string, unknown>[]>(
     `SELECT b.id, b.title, b.author, b.grade, b.class_name as "className",
             b.condition, b.description, b.image_url as "imageUrl", b.status,
             b.created_at as "createdAt", b.owner_id as "ownerId",

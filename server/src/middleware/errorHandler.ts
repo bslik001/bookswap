@@ -8,7 +8,7 @@ export class AppError extends Error {
     public statusCode: number,
     public code: string,
     message: string,
-    public details?: any[]
+    public details?: { field: string; message: string }[]
   ) {
     super(message);
     this.name = 'AppError';
@@ -46,7 +46,7 @@ export const errorHandler = (err: Error, _req: Request, res: Response, _next: Ne
 
   // Erreurs Prisma (detection par nom de classe pour eviter import avant generation)
   if (err.constructor?.name === 'PrismaClientKnownRequestError') {
-    const prismaErr = err as any;
+    const prismaErr = err as Error & { code: string; meta?: { target?: string[] } };
     if (prismaErr.code === 'P2002') {
       const target = (prismaErr.meta?.target as string[])?.join(', ') || 'champ';
       return res.status(409).json({

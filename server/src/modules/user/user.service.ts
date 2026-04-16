@@ -3,7 +3,7 @@ import { AppError } from '../../middleware/errorHandler';
 import { comparePassword } from '../../utils/password';
 import { paginate, buildMeta } from '../../utils/pagination';
 import type { UpdateProfileInput, ListUsersInput } from './user.schema';
-import type { Role } from '@prisma/client';
+
 
 const publicUserSelect = {
   id: true,
@@ -85,7 +85,7 @@ export const listUsers = async (query: ListUsersInput) => {
   const { page, limit, role, search } = query;
   const { skip, take } = paginate(page, limit);
 
-  const where: any = {};
+  const where: Record<string, unknown> = {};
   if (role) where.role = role;
   if (search) {
     where.OR = [

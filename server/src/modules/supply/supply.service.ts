@@ -1,6 +1,6 @@
 import { prisma } from '../../lib/prisma';
 import { AppError } from '../../middleware/errorHandler';
-import { uploadImage, deleteImage } from '../../utils/cloudinary';
+import { uploadImage } from '../../utils/cloudinary';
 import { paginate, buildMeta } from '../../utils/pagination';
 import { createNotification } from '../notification/notification.service';
 import type { CreateSupplyInput, ListSuppliesInput, ContactSupplierInput } from './supply.schema';
@@ -16,7 +16,8 @@ export const listSupplies = async (query: ListSuppliesInput) => {
   const { page, limit, type } = query;
   const { skip, take } = paginate(page, limit);
 
-  const where: any = {};
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const where: Record<string, any> = {};
   if (type) where.type = type;
 
   const [supplies, total] = await Promise.all([
@@ -51,7 +52,7 @@ export const getSupplyById = async (supplyId: string) => {
 export const createSupply = async (supplierId: string, data: CreateSupplyInput, imageBuffer?: Buffer) => {
   let imageData = {};
   if (imageBuffer) {
-    const { url, publicId } = await uploadImage(imageBuffer, 'supplies');
+    const { url } = await uploadImage(imageBuffer, 'supplies');
     imageData = { imageUrl: url };
   }
 
