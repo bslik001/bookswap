@@ -34,7 +34,7 @@ export const refreshToken = asyncHandler(async (req: Request, res: Response) => 
 });
 
 export const logout = asyncHandler(async (req: Request, res: Response) => {
-  await authService.logout(req.user!.id);
+  await authService.logout(req.user!.id, req.body.refreshToken);
   res.json({ success: true, data: { message: 'Deconnexion reussie' } });
 });
 

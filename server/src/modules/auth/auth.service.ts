@@ -1,10 +1,30 @@
 import { prisma } from '../../lib/prisma';
 import { hashPassword, comparePassword } from '../../utils/password';
-import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from '../../utils/jwt';
+import { generateAccessToken, generateRefreshToken, verifyRefreshToken, hashToken } from '../../utils/jwt';
 import { generateOtp, isOtpExpired } from '../../utils/otp';
 import { sendSms } from '../../config/africastalking';
 import { AppError } from '../../middleware/errorHandler';
 import type { RegisterInput, LoginInput, VerifyOtpInput, ResendOtpInput, ChangePasswordInput, ForgotPasswordInput, ResetPasswordInput } from './auth.schema';
+
+// ── Helper: creer et stocker un refresh token ──
+const createStoredRefreshToken = async (userId: string, tokenVersion: number) => {
+  const token = generateRefreshToken({ userId, tokenVersion });
+  await prisma.refreshToken.create({
+    data: {
+      tokenHash: hashToken(token),
+      userId,
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 jours
+    },
+  });
+  return token;
+};
+
+// ── Helper: nettoyage des refresh tokens expires ──
+const cleanupExpiredRefreshTokens = async () => {
+  await prisma.refreshToken.deleteMany({
+    where: { expiresAt: { lt: new Date() } },
+  });
+};
 
 // ── Register ──
 export const register = async (data: RegisterInput) => {
@@ -104,7 +124,7 @@ export const verifyOtp = async (data: VerifyOtpInput) => {
 
   // Generer les tokens
   const accessToken = generateAccessToken({ userId: user.id, role: user.role });
-  const refreshToken = generateRefreshToken({ userId: user.id, tokenVersion: user.tokenVersion });
+  const refreshToken = await createStoredRefreshToken(user.id, user.tokenVersion);
 
   return {
     accessToken,
@@ -181,7 +201,7 @@ export const login = async (data: LoginInput) => {
   }
 
   const accessToken = generateAccessToken({ userId: user.id, role: user.role });
-  const refreshToken = generateRefreshToken({ userId: user.id, tokenVersion: user.tokenVersion });
+  const refreshToken = await createStoredRefreshToken(user.id, user.tokenVersion);
 
   return {
     accessToken,
@@ -197,9 +217,19 @@ export const login = async (data: LoginInput) => {
   };
 };
 
-// ── Refresh Token ──
+// ── Refresh Token (rotation: ancien supprime, nouveau cree) ──
 export const refreshToken = async (token: string) => {
   const payload = verifyRefreshToken(token);
+
+  // Verifier que le token existe en base
+  const tokenHash = hashToken(token);
+  const storedToken = await prisma.refreshToken.findUnique({ where: { tokenHash } });
+
+  if (!storedToken) {
+    // Token reutilise apres rotation → compromis, revoquer toute la famille
+    await prisma.refreshToken.deleteMany({ where: { userId: payload.userId } });
+    throw new AppError(401, 'TOKEN_REVOKED', 'Token revoque, veuillez vous reconnecter');
+  }
 
   const user = await prisma.user.findUnique({ where: { id: payload.userId } });
 
@@ -208,22 +238,35 @@ export const refreshToken = async (token: string) => {
   }
 
   if (user.tokenVersion !== payload.tokenVersion) {
+    await prisma.refreshToken.deleteMany({ where: { userId: user.id } });
     throw new AppError(401, 'TOKEN_REVOKED', 'Token revoque, veuillez vous reconnecter');
   }
 
+  // Rotation: supprimer l'ancien, creer un nouveau
+  await prisma.refreshToken.delete({ where: { id: storedToken.id } });
   const accessToken = generateAccessToken({ userId: user.id, role: user.role });
-  const newRefreshToken = generateRefreshToken({ userId: user.id, tokenVersion: user.tokenVersion });
+  const newRefreshToken = await createStoredRefreshToken(user.id, user.tokenVersion);
+
+  // Nettoyage opportuniste des tokens expires
+  cleanupExpiredRefreshTokens().catch(() => {});
 
   return { accessToken, refreshToken: newRefreshToken };
 };
 
-// ── Logout ──
-export const logout = async (userId: string) => {
-  // Incrementer tokenVersion pour invalider tous les refresh tokens
-  await prisma.user.update({
-    where: { id: userId },
-    data: { tokenVersion: { increment: 1 } },
-  });
+// ── Logout (supprime le refresh token specifique) ──
+export const logout = async (userId: string, token?: string) => {
+  if (token) {
+    // Revoquer le token specifique de cette session
+    const tokenHash = hashToken(token);
+    await prisma.refreshToken.deleteMany({ where: { tokenHash, userId } });
+  } else {
+    // Fallback: revoquer tous les tokens (logout global)
+    await prisma.refreshToken.deleteMany({ where: { userId } });
+    await prisma.user.update({
+      where: { id: userId },
+      data: { tokenVersion: { increment: 1 } },
+    });
+  }
 };
 
 // ── Change Password ──
@@ -246,6 +289,7 @@ export const changePassword = async (userId: string, data: ChangePasswordInput) 
     where: { id: userId },
     data: { password: hashed, tokenVersion: { increment: 1 } },
   });
+  await prisma.refreshToken.deleteMany({ where: { userId } });
 };
 
 // ── Forgot Password (envoi OTP) ──
@@ -335,6 +379,7 @@ export const resetPassword = async (data: ResetPasswordInput) => {
     where: { id: user.id },
     data: { password: hashed, tokenVersion: { increment: 1 } },
   });
+  await prisma.refreshToken.deleteMany({ where: { userId: user.id } });
 
   await prisma.otpVerification.deleteMany({ where: { phone: data.phone } });
 };
