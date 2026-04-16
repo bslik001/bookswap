@@ -33,8 +33,36 @@ export const refreshTokenSchema = z.object({
   refreshToken: z.string().min(1, 'Refresh token requis'),
 });
 
+export const changePasswordSchema = z.object({
+  currentPassword: z.string().min(1, 'Mot de passe actuel requis'),
+  newPassword: z.string()
+    .min(8, 'Minimum 8 caracteres')
+    .regex(
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
+      'Doit contenir majuscule, minuscule et chiffre'
+    ),
+});
+
+export const forgotPasswordSchema = z.object({
+  phone: z.string().min(8).max(20),
+});
+
+export const resetPasswordSchema = z.object({
+  phone: z.string().min(8).max(20),
+  code: z.string().length(4, 'Le code doit contenir 4 chiffres'),
+  newPassword: z.string()
+    .min(8, 'Minimum 8 caracteres')
+    .regex(
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
+      'Doit contenir majuscule, minuscule et chiffre'
+    ),
+});
+
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type VerifyOtpInput = z.infer<typeof verifyOtpSchema>;
 export type ResendOtpInput = z.infer<typeof resendOtpSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
 export type RefreshTokenInput = z.infer<typeof refreshTokenSchema>;
+export type ChangePasswordInput = z.infer<typeof changePasswordSchema>;
+export type ForgotPasswordInput = z.infer<typeof forgotPasswordSchema>;
+export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;

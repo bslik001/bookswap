@@ -31,3 +31,14 @@ export const blockUser = asyncHandler(async (req: Request, res: Response) => {
   const user = await userService.blockUser(req.params.id as string, block);
   res.json({ success: true, data: user });
 });
+
+export const deleteAccount = asyncHandler(async (req: Request, res: Response) => {
+  const { password } = req.body;
+  await userService.deleteAccount(req.user!.id, password);
+  res.json({ success: true, data: { message: 'Compte supprime avec succes' } });
+});
+
+export const getStats = asyncHandler(async (_req: Request, res: Response) => {
+  const stats = await userService.getStats();
+  res.json({ success: true, data: stats });
+});

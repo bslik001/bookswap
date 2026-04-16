@@ -4,7 +4,7 @@ import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from '.
 import { generateOtp, isOtpExpired } from '../../utils/otp';
 import { sendSms } from '../../config/africastalking';
 import { AppError } from '../../middleware/errorHandler';
-import type { RegisterInput, LoginInput, VerifyOtpInput, ResendOtpInput } from './auth.schema';
+import type { RegisterInput, LoginInput, VerifyOtpInput, ResendOtpInput, ChangePasswordInput, ForgotPasswordInput, ResetPasswordInput } from './auth.schema';
 
 // ── Register ──
 export const register = async (data: RegisterInput) => {
@@ -34,11 +34,12 @@ export const register = async (data: RegisterInput) => {
     },
   });
 
-  // Generer et stocker l'OTP
+  // Generer et stocker l'OTP (lie au user)
   const code = generateOtp();
   await prisma.otpVerification.create({
     data: {
       phone: data.phone,
+      userId: user.id,
       code,
       expiresAt: new Date(Date.now() + 5 * 60 * 1000), // 5 minutes
     },
@@ -56,8 +57,16 @@ export const register = async (data: RegisterInput) => {
   };
 };
 
+// ── Cleanup OTP expires (nettoyage opportuniste) ──
+const cleanupExpiredOtps = async () => {
+  await prisma.otpVerification.deleteMany({
+    where: { expiresAt: { lt: new Date() } },
+  });
+};
+
 // ── Verify OTP ──
 export const verifyOtp = async (data: VerifyOtpInput) => {
+  await cleanupExpiredOtps();
   const otp = await prisma.otpVerification.findFirst({
     where: { phone: data.phone },
     orderBy: { createdAt: 'desc' },
@@ -206,4 +215,126 @@ export const refreshToken = async (token: string) => {
   const newRefreshToken = generateRefreshToken({ userId: user.id, tokenVersion: user.tokenVersion });
 
   return { accessToken, refreshToken: newRefreshToken };
+};
+
+// ── Logout ──
+export const logout = async (userId: string) => {
+  // Incrementer tokenVersion pour invalider tous les refresh tokens
+  await prisma.user.update({
+    where: { id: userId },
+    data: { tokenVersion: { increment: 1 } },
+  });
+};
+
+// ── Change Password ──
+export const changePassword = async (userId: string, data: ChangePasswordInput) => {
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+
+  if (!user) {
+    throw new AppError(404, 'NOT_FOUND', 'Utilisateur introuvable');
+  }
+
+  const isValid = await comparePassword(data.currentPassword, user.password);
+  if (!isValid) {
+    throw new AppError(400, 'INVALID_PASSWORD', 'Mot de passe actuel incorrect');
+  }
+
+  const hashed = await hashPassword(data.newPassword);
+
+  // Changer le mot de passe + invalider tous les refresh tokens
+  await prisma.user.update({
+    where: { id: userId },
+    data: { password: hashed, tokenVersion: { increment: 1 } },
+  });
+};
+
+// ── Forgot Password (envoi OTP) ──
+export const forgotPassword = async (data: ForgotPasswordInput) => {
+  const user = await prisma.user.findUnique({ where: { phone: data.phone } });
+
+  if (!user) {
+    // Ne pas reveler si le numero existe ou non
+    return { message: 'Si ce numero est associe a un compte, un code a ete envoye' };
+  }
+
+  if (!user.isActive) {
+    throw new AppError(403, 'ACCOUNT_INACTIVE', 'Compte non active');
+  }
+
+  // Cooldown 60s
+  const lastOtp = await prisma.otpVerification.findFirst({
+    where: { phone: data.phone },
+    orderBy: { createdAt: 'desc' },
+  });
+
+  if (lastOtp && Date.now() - lastOtp.createdAt.getTime() < 60 * 1000) {
+    throw new AppError(429, 'COOLDOWN', 'Veuillez attendre 60 secondes');
+  }
+
+  // Max 3/heure
+  const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+  const recentCount = await prisma.otpVerification.count({
+    where: { phone: data.phone, createdAt: { gte: oneHourAgo } },
+  });
+
+  if (recentCount >= 3) {
+    throw new AppError(429, 'RATE_LIMITED', 'Maximum 3 codes par heure');
+  }
+
+  await prisma.otpVerification.deleteMany({ where: { phone: data.phone } });
+
+  const code = generateOtp();
+  await prisma.otpVerification.create({
+    data: {
+      phone: data.phone,
+      code,
+      expiresAt: new Date(Date.now() + 5 * 60 * 1000),
+    },
+  });
+
+  await sendSms(data.phone, `BookSwap: Votre code de reinitialisation est ${code}`);
+
+  return { message: 'Si ce numero est associe a un compte, un code a ete envoye' };
+};
+
+// ── Reset Password ──
+export const resetPassword = async (data: ResetPasswordInput) => {
+  const otp = await prisma.otpVerification.findFirst({
+    where: { phone: data.phone },
+    orderBy: { createdAt: 'desc' },
+  });
+
+  if (!otp) {
+    throw new AppError(400, 'INVALID_OTP', 'Aucun code OTP trouve');
+  }
+
+  if (isOtpExpired(otp.expiresAt)) {
+    throw new AppError(400, 'OTP_EXPIRED', 'Code expire, demandez-en un nouveau');
+  }
+
+  if (otp.attempts >= 5) {
+    throw new AppError(429, 'TOO_MANY_ATTEMPTS', 'Trop de tentatives, demandez un nouveau code');
+  }
+
+  if (otp.code !== data.code) {
+    await prisma.otpVerification.update({
+      where: { id: otp.id },
+      data: { attempts: { increment: 1 } },
+    });
+    throw new AppError(400, 'INVALID_OTP', 'Code incorrect');
+  }
+
+  const user = await prisma.user.findUnique({ where: { phone: data.phone } });
+  if (!user) {
+    throw new AppError(404, 'NOT_FOUND', 'Aucun compte avec ce numero');
+  }
+
+  const hashed = await hashPassword(data.newPassword);
+
+  await prisma.user.update({
+    where: { id: user.id },
+    data: { password: hashed, tokenVersion: { increment: 1 } },
+  });
+
+  await prisma.otpVerification.deleteMany({ where: { phone: data.phone } });
 };

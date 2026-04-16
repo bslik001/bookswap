@@ -1,5 +1,6 @@
 import { prisma } from '../../lib/prisma';
 import { AppError } from '../../middleware/errorHandler';
+import { comparePassword } from '../../utils/password';
 import { paginate, buildMeta } from '../../utils/pagination';
 import type { UpdateProfileInput, ListUsersInput } from './user.schema';
 import type { Role } from '@prisma/client';
@@ -131,4 +132,66 @@ export const blockUser = async (userId: string, block: boolean) => {
   });
 
   return updated;
+};
+
+// ── Supprimer mon compte ──
+export const deleteAccount = async (userId: string, password: string) => {
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+
+  if (!user) {
+    throw new AppError(404, 'NOT_FOUND', 'Utilisateur introuvable');
+  }
+
+  const isValid = await comparePassword(password, user.password);
+  if (!isValid) {
+    throw new AppError(400, 'INVALID_PASSWORD', 'Mot de passe incorrect');
+  }
+
+  // Suppression en cascade (les relations ont onDelete: Cascade)
+  await prisma.user.delete({ where: { id: userId } });
+};
+
+// ── Admin : statistiques globales ──
+export const getStats = async () => {
+  const [
+    totalUsers, activeUsers, blockedUsers,
+    availableBooks, reservedBooks, exchangedBooks,
+    pendingRequests, inProgressRequests, completedRequests,
+    totalSupplies, totalContactRequests,
+  ] = await Promise.all([
+    prisma.user.count(),
+    prisma.user.count({ where: { isActive: true } }),
+    prisma.user.count({ where: { isActive: false, isPhoneVerified: true } }),
+    prisma.book.count({ where: { status: 'AVAILABLE' } }),
+    prisma.book.count({ where: { status: 'RESERVED' } }),
+    prisma.book.count({ where: { status: 'EXCHANGED' } }),
+    prisma.request.count({ where: { status: 'PENDING' } }),
+    prisma.request.count({ where: { status: 'IN_PROGRESS' } }),
+    prisma.request.count({ where: { status: 'COMPLETED' } }),
+    prisma.supply.count(),
+    prisma.contactRequest.count(),
+  ]);
+
+  return {
+    users: {
+      total: totalUsers,
+      active: activeUsers,
+      blocked: blockedUsers,
+    },
+    books: {
+      available: availableBooks,
+      reserved: reservedBooks,
+      exchanged: exchangedBooks,
+      total: availableBooks + reservedBooks + exchangedBooks,
+    },
+    requests: {
+      pending: pendingRequests,
+      inProgress: inProgressRequests,
+      completed: completedRequests,
+    },
+    supplies: {
+      total: totalSupplies,
+      contactRequests: totalContactRequests,
+    },
+  };
 };
