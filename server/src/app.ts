@@ -4,6 +4,8 @@ import { env } from './config/env';
 import { globalLimiter } from './middleware/rateLimiter';
 import { errorHandler, AppError } from './middleware/errorHandler';
 import { prisma } from './lib/prisma';
+import swaggerUi from 'swagger-ui-express';
+import { swaggerSpec } from './config/swagger';
 import authRoutes from './modules/auth/auth.routes';
 import userRoutes, { adminUserRouter } from './modules/user/user.routes';
 import bookRoutes from './modules/book/book.routes';
@@ -18,6 +20,13 @@ app.use(cors({ origin: env.CORS_ORIGIN, credentials: true }));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(globalLimiter);
+
+// ── Documentation API ──
+app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
+  customSiteTitle: 'BookSwap API',
+  customCss: '.swagger-ui .topbar { display: none }',
+}));
+app.get('/api/docs.json', (_req, res) => res.json(swaggerSpec));
 
 // ── Health checks ──
 app.get('/api/health', (_req, res) => {
