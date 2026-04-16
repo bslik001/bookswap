@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { authenticate, authorize } from '../../middleware/auth';
 import { validate } from '../../middleware/validate';
+import { validateId } from '../../middleware/validateId';
 import { uploadSingle } from '../../middleware/upload';
 import { createSupplySchema, listSuppliesSchema, contactSupplierSchema } from './supply.schema';
 import * as supplyController from './supply.controller';
@@ -11,7 +12,7 @@ router.use(authenticate);
 
 // Liste et detail (tout utilisateur authentifie)
 router.get('/', validate(listSuppliesSchema, 'query'), supplyController.listSupplies);
-router.get('/:id', supplyController.getSupplyById);
+router.get('/:id', validateId, supplyController.getSupplyById);
 
 // Creer (SUPPLIER ou ADMIN uniquement)
 router.post('/',
@@ -22,6 +23,6 @@ router.post('/',
 );
 
 // Contacter le fournisseur
-router.post('/:id/contact', validate(contactSupplierSchema), supplyController.contactSupplier);
+router.post('/:id/contact', validateId, validate(contactSupplierSchema), supplyController.contactSupplier);
 
 export default router;

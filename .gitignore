@@ -1,5 +1,17 @@
+# Dependencies
 node_modules/
+
+# Build
 dist/
+
+# Secrets — ne jamais commiter
 .env
+.env.local
+.env.production
+*.pem
+
+# Logs
 *.log
+
+# Claude Code
 .claude/

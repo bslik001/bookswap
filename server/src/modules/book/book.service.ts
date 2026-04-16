@@ -148,6 +148,9 @@ export const listBooks = async (query: ListBooksInput, currentUserId: string) =>
 };
 
 // ── Full-text search avec ts_rank ──
+// Note securite : $queryRawUnsafe est utilise ici car le WHERE est dynamique,
+// mais toutes les valeurs utilisateur passent par des parametres positionels ($1, $2...)
+// et ne sont jamais interpolees dans la string SQL.
 async function listBooksFullText(
   search: string,
   opts: { grade?: string; condition?: string; status?: string; skip: number; take: number; page: number; limit: number; currentUserId: string }

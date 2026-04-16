@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { authenticate, authorize } from '../../middleware/auth';
 import { validate } from '../../middleware/validate';
+import { validateId } from '../../middleware/validateId';
 import { createRequestSchema, listRequestsSchema, updateRequestStatusSchema } from './request.schema';
 import * as requestController from './request.controller';
 
@@ -20,4 +21,4 @@ adminRequestRouter.use(authenticate);
 adminRequestRouter.use(authorize('ADMIN'));
 
 adminRequestRouter.get('/', validate(listRequestsSchema, 'query'), requestController.listAllRequests);
-adminRequestRouter.put('/:id', validate(updateRequestStatusSchema), requestController.updateRequestStatus);
+adminRequestRouter.put('/:id', validateId, validate(updateRequestStatusSchema), requestController.updateRequestStatus);
