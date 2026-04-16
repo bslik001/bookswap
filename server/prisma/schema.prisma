@@ -94,6 +94,7 @@ model Book {
   @@index([grade])
   @@index([status])
   @@index([ownerId])
+  @@index([status, grade, condition])
   @@map("books")
 }
 

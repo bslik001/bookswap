@@ -3,6 +3,7 @@ import cors from 'cors';
 import { env } from './config/env';
 import { globalLimiter } from './middleware/rateLimiter';
 import { errorHandler, AppError } from './middleware/errorHandler';
+import { prisma } from './lib/prisma';
 import authRoutes from './modules/auth/auth.routes';
 import userRoutes, { adminUserRouter } from './modules/user/user.routes';
 import bookRoutes from './modules/book/book.routes';
@@ -18,9 +19,21 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(globalLimiter);
 
-// ── Health check ──
+// ── Health checks ──
 app.get('/api/health', (_req, res) => {
   res.json({ success: true, data: { status: 'ok' } });
+});
+
+app.get('/api/health/ready', async (_req, res) => {
+  try {
+    await prisma.$queryRaw`SELECT 1`;
+    res.json({ success: true, data: { status: 'ready', database: 'connected' } });
+  } catch {
+    res.status(503).json({
+      success: false,
+      error: { code: 'SERVICE_UNAVAILABLE', message: 'Base de donnees inaccessible', database: 'disconnected' },
+    });
+  }
 });
 
 // ── Routes API ──
