@@ -1,7 +1,7 @@
 # BookSwap
 
 [![CI](https://github.com/bslik001/bookswap/actions/workflows/ci.yml/badge.svg)](https://github.com/bslik001/bookswap/actions/workflows/ci.yml)
-[![Node](https://img.shields.io/badge/node-%3E=18-brightgreen)](.nvmrc)
+[![Node](https://img.shields.io/badge/node-%3E=20.12-brightgreen)](.nvmrc)
 [![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
 Application mobile d'echange de livres scolaires. Les eleves et parents publient les manuels qu'ils souhaitent echanger, un administrateur facilite la mise en relation, et les fournisseurs proposent des fournitures scolaires.
@@ -275,7 +275,7 @@ PENDING → IN_PROGRESS → ACCEPTED → COMPLETED
 
 ### Prerequis
 
-- Node.js >= 18
+- Node.js >= 20.12 (requis par Vitest 4 / rolldown)
 - PostgreSQL >= 14
 
 ### Configuration

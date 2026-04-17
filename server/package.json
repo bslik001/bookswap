@@ -20,7 +20,7 @@
     "check": "npm run lint && npm run typecheck && npm test"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=20.12"
   },
   "prisma": {
     "seed": "ts-node-dev --transpile-only prisma/seed.ts"

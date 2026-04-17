@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1.6
 
 # ── Build ──
-FROM node:18-alpine AS builder
+FROM node:22-alpine AS builder
 
 WORKDIR /app
 
@@ -16,7 +16,7 @@ COPY src/ ./src/
 RUN npm run build
 
 # ── Production ──
-FROM node:18-alpine
+FROM node:22-alpine
 
 # wget pour HEALTHCHECK, dumb-init pour handle proprement SIGTERM (PID 1)
 RUN apk add --no-cache wget dumb-init
