@@ -1,5 +1,9 @@
 # BookSwap
 
+[![CI](https://github.com/bslik001/bookswap/actions/workflows/ci.yml/badge.svg)](https://github.com/bslik001/bookswap/actions/workflows/ci.yml)
+[![Node](https://img.shields.io/badge/node-%3E=18-brightgreen)](.nvmrc)
+[![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
+
 Application mobile d'echange de livres scolaires. Les eleves et parents publient les manuels qu'ils souhaitent echanger, un administrateur facilite la mise en relation, et les fournisseurs proposent des fournitures scolaires.
 
 ## Documentation
@@ -327,6 +331,16 @@ npm run lint:fix
 
 # Formattage
 npm run format
+
+# Typecheck seul
+npm run typecheck
+
+# Tests (Vitest)
+npm test
+npm run test:watch
+
+# Tout en une commande : lint + typecheck + tests
+npm run check
 ```
 
 ### Verification
