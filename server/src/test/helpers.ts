@@ -1,6 +1,6 @@
 import bcrypt from 'bcrypt';
 import { prisma } from '../lib/prisma';
-import { Role } from '@prisma/client';
+import { BookCondition, BookStatus, Role } from '@prisma/client';
 import { generateAccessToken } from '../utils/jwt';
 
 type CreateUserOverrides = Partial<{
@@ -35,4 +35,25 @@ export async function createTestUser(overrides: CreateUserOverrides = {}) {
 
 export function accessTokenFor(user: { id: string; role: Role }): string {
   return generateAccessToken({ userId: user.id, role: user.role });
+}
+
+type CreateBookOverrides = Partial<{
+  title: string;
+  grade: string;
+  condition: BookCondition;
+  status: BookStatus;
+}>;
+
+export async function createTestBook(ownerId: string, overrides: CreateBookOverrides = {}) {
+  return prisma.book.create({
+    data: {
+      title: overrides.title ?? 'Test Book',
+      author: 'Test Author',
+      grade: overrides.grade ?? '6eme',
+      condition: overrides.condition ?? BookCondition.USED,
+      status: overrides.status ?? BookStatus.AVAILABLE,
+      imageUrl: 'https://example.com/placeholder.jpg',
+      ownerId,
+    },
+  });
 }
