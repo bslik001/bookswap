@@ -74,6 +74,106 @@ export const createRequest = async (requesterId: string, data: CreateRequestInpu
   };
 };
 
+// ── Detail d'une demande (visible par le demandeur ou le proprietaire du livre) ──
+export const getRequestById = async (requestId: string, userId: string) => {
+  const req = await prisma.request.findUnique({
+    where: { id: requestId },
+    include: {
+      book: {
+        select: {
+          id: true,
+          title: true,
+          imageUrl: true,
+          grade: true,
+          ownerId: true,
+          owner: { select: { id: true, firstName: true, lastName: true } },
+        },
+      },
+      requester: { select: { id: true, firstName: true, lastName: true } },
+    },
+  });
+
+  if (!req) {
+    throw new AppError(404, 'NOT_FOUND', 'Demande introuvable');
+  }
+
+  if (req.requesterId !== userId && req.book.ownerId !== userId) {
+    throw new AppError(403, 'FORBIDDEN', 'Vous n\'avez pas acces a cette demande');
+  }
+
+  return {
+    id: req.id,
+    status: req.status,
+    createdAt: req.createdAt,
+    updatedAt: req.updatedAt,
+    book: {
+      id: req.book.id,
+      title: req.book.title,
+      imageUrl: req.book.imageUrl,
+      grade: req.book.grade,
+      owner: req.book.owner,
+    },
+    requester: req.requester,
+  };
+};
+
+// ── Annuler sa propre demande (tant que PENDING) ──
+export const cancelRequest = async (requestId: string, userId: string) => {
+  const req = await prisma.request.findUnique({
+    where: { id: requestId },
+    select: { id: true, status: true, requesterId: true, bookId: true },
+  });
+
+  if (!req) {
+    throw new AppError(404, 'NOT_FOUND', 'Demande introuvable');
+  }
+
+  if (req.requesterId !== userId) {
+    throw new AppError(403, 'FORBIDDEN', 'Vous ne pouvez annuler que vos propres demandes');
+  }
+
+  if (req.status !== 'PENDING') {
+    throw new AppError(
+      400,
+      'CANNOT_CANCEL',
+      'Seules les demandes en attente peuvent etre annulees',
+    );
+  }
+
+  await prisma.request.delete({ where: { id: requestId } });
+};
+
+// ── Lister les demandes sur un livre dont je suis proprietaire ──
+export const getRequestsForBook = async (bookId: string, ownerId: string) => {
+  const book = await prisma.book.findUnique({
+    where: { id: bookId },
+    select: { id: true, ownerId: true },
+  });
+
+  if (!book) {
+    throw new AppError(404, 'NOT_FOUND', 'Livre introuvable');
+  }
+
+  if (book.ownerId !== ownerId) {
+    throw new AppError(403, 'FORBIDDEN', 'Seul le proprietaire peut voir les demandes sur son livre');
+  }
+
+  const requests = await prisma.request.findMany({
+    where: { bookId },
+    include: {
+      requester: { select: { id: true, firstName: true, lastName: true } },
+    },
+    orderBy: { createdAt: 'desc' },
+  });
+
+  return requests.map((r) => ({
+    id: r.id,
+    status: r.status,
+    createdAt: r.createdAt,
+    requester: r.requester,
+  }));
+};
+
 // ── Mes demandes ──
 export const getMyRequests = async (requesterId: string) => {
   const requests = await prisma.request.findMany({

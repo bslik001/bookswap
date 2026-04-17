@@ -153,6 +153,7 @@ bookswap/
 | POST | `/api/books` | Creer (multipart/form-data + image) | User |
 | PUT | `/api/books/:id` | Modifier (proprietaire uniquement) | User |
 | DELETE | `/api/books/:id` | Supprimer (proprietaire ou admin) | User |
+| GET | `/api/books/:id/requests` | Demandes recues sur mon livre (proprietaire) | User |
 
 ### Demandes
 
@@ -160,6 +161,8 @@ bookswap/
 |---------|----------|-------------|------|
 | POST | `/api/requests` | Demander un livre (regles RG-04, RG-05) | User |
 | GET | `/api/requests/me` | Mes demandes avec infos livre | User |
+| GET | `/api/requests/:id` | Detail (demandeur ou proprietaire) | User |
+| DELETE | `/api/requests/:id` | Annuler ma demande (tant que PENDING) | User |
 
 ### Fournitures
 

@@ -14,6 +14,21 @@ export const getMyRequests = asyncHandler(async (req: Request, res: Response) =>
   res.json({ success: true, data: requests });
 });
 
+export const getRequestById = asyncHandler(async (req: Request, res: Response) => {
+  const result = await requestService.getRequestById(req.params.id as string, req.user!.id);
+  res.json({ success: true, data: result });
+});
+
+export const cancelRequest = asyncHandler(async (req: Request, res: Response) => {
+  await requestService.cancelRequest(req.params.id as string, req.user!.id);
+  res.json({ success: true, data: { message: 'Demande annulee' } });
+});
+
+export const getRequestsForBook = asyncHandler(async (req: Request, res: Response) => {
+  const result = await requestService.getRequestsForBook(req.params.id as string, req.user!.id);
+  res.json({ success: true, data: result });
+});
+
 // ── Admin ──
 export const listAllRequests = asyncHandler(async (req: Request, res: Response) => {
   const query = req.query as unknown as ListRequestsInput;

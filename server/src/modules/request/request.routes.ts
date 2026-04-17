@@ -11,6 +11,8 @@ router.use(authenticate);
 
 router.post('/', validate(createRequestSchema), requestController.createRequest);
 router.get('/me', requestController.getMyRequests);
+router.get('/:id', validateId, requestController.getRequestById);
+router.delete('/:id', validateId, requestController.cancelRequest);
 
 export default router;
 

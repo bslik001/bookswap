@@ -192,3 +192,147 @@ describe('PUT /api/admin/requests/:id', () => {
     expect(res.status).toBe(404);
   });
 });
+
+describe('GET /api/requests/:id', () => {
+  it('returns the request to the requester', async () => {
+    const { user: owner } = await createTestUser();
+    const { user: requester } = await createTestUser();
+    const book = await createTestBook(owner.id);
+    const req = await prisma.request.create({
+      data: { bookId: book.id, requesterId: requester.id },
+    });
+
+    const res = await request(app)
+      .get(`/api/requests/${req.id}`)
+      .set('Authorization', `Bearer ${accessTokenFor(requester)}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.data.id).toBe(req.id);
+    expect(res.body.data.book.id).toBe(book.id);
+  });
+
+  it('returns the request to the book owner', async () => {
+    const { user: owner } = await createTestUser();
+    const { user: requester } = await createTestUser();
+    const book = await createTestBook(owner.id);
+    const req = await prisma.request.create({
+      data: { bookId: book.id, requesterId: requester.id },
+    });
+
+    const res = await request(app)
+      .get(`/api/requests/${req.id}`)
+      .set('Authorization', `Bearer ${accessTokenFor(owner)}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.data.id).toBe(req.id);
+  });
+
+  it('rejects an unrelated user with 403', async () => {
+    const { user: owner } = await createTestUser();
+    const { user: requester } = await createTestUser();
+    const { user: outsider } = await createTestUser();
+    const book = await createTestBook(owner.id);
+    const req = await prisma.request.create({
+      data: { bookId: book.id, requesterId: requester.id },
+    });
+
+    const res = await request(app)
+      .get(`/api/requests/${req.id}`)
+      .set('Authorization', `Bearer ${accessTokenFor(outsider)}`);
+
+    expect(res.status).toBe(403);
+  });
+});
+
+describe('DELETE /api/requests/:id', () => {
+  it('lets the requester cancel a PENDING request', async () => {
+    const { user: owner } = await createTestUser();
+    const { user: requester } = await createTestUser();
+    const book = await createTestBook(owner.id);
+    const req = await prisma.request.create({
+      data: { bookId: book.id, requesterId: requester.id },
+    });
+
+    const res = await request(app)
+      .delete(`/api/requests/${req.id}`)
+      .set('Authorization', `Bearer ${accessTokenFor(requester)}`);
+
+    expect(res.status).toBe(200);
+    const stored = await prisma.request.findUnique({ where: { id: req.id } });
+    expect(stored).toBeNull();
+  });
+
+  it('rejects cancelling a non-PENDING request', async () => {
+    const { user: owner } = await createTestUser();
+    const { user: requester } = await createTestUser();
+    const book = await createTestBook(owner.id);
+    const req = await prisma.request.create({
+      data: { bookId: book.id, requesterId: requester.id, status: 'IN_PROGRESS' },
+    });
+
+    const res = await request(app)
+      .delete(`/api/requests/${req.id}`)
+      .set('Authorization', `Bearer ${accessTokenFor(requester)}`);
+
+    expect(res.status).toBe(400);
+    expect(res.body.error.code).toBe('CANNOT_CANCEL');
+  });
+
+  it('rejects cancelling someone else\'s request', async () => {
+    const { user: owner } = await createTestUser();
+    const { user: requester } = await createTestUser();
+    const { user: outsider } = await createTestUser();
+    const book = await createTestBook(owner.id);
+    const req = await prisma.request.create({
+      data: { bookId: book.id, requesterId: requester.id },
+    });
+
+    const res = await request(app)
+      .delete(`/api/requests/${req.id}`)
+      .set('Authorization', `Bearer ${accessTokenFor(outsider)}`);
+
+    expect(res.status).toBe(403);
+  });
+});
+
+describe('GET /api/books/:id/requests', () => {
+  it('lists requests on the owner\'s book', async () => {
+    const { user: owner } = await createTestUser();
+    const { user: r1 } = await createTestUser();
+    const { user: r2 } = await createTestUser();
+    const book = await createTestBook(owner.id);
+
+    await prisma.request.create({ data: { bookId: book.id, requesterId: r1.id } });
+    await prisma.request.create({ data: { bookId: book.id, requesterId: r2.id } });
+
+    const res = await request(app)
+      .get(`/api/books/${book.id}/requests`)
+      .set('Authorization', `Bearer ${accessTokenFor(owner)}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.data).toHaveLength(2);
+    expect(res.body.data[0].requester).toBeTruthy();
+  });
+
+  it('rejects non-owner access with 403', async () => {
+    const { user: owner } = await createTestUser();
+    const { user: outsider } = await createTestUser();
+    const book = await createTestBook(owner.id);
+
+    const res = await request(app)
+      .get(`/api/books/${book.id}/requests`)
+      .set('Authorization', `Bearer ${accessTokenFor(outsider)}`);
+
+    expect(res.status).toBe(403);
+  });
+
+  it('returns 404 for unknown book id', async () => {
+    const { user: owner } = await createTestUser();
+
+    const res = await request(app)
+      .get(`/api/books/11111111-1111-1111-1111-111111111111/requests`)
+      .set('Authorization', `Bearer ${accessTokenFor(owner)}`);
+
+    expect(res.status).toBe(404);
+  });
+});

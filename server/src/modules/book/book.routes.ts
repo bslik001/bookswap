@@ -5,6 +5,7 @@ import { validateId } from '../../middleware/validateId';
 import { uploadSingle } from '../../middleware/upload';
 import { createBookSchema, updateBookSchema, listBooksSchema } from './book.schema';
 import * as bookController from './book.controller';
+import * as requestController from '../request/request.controller';
 
 const router = Router();
 
@@ -19,6 +20,9 @@ router.get('/', validate(listBooksSchema, 'query'), bookController.listBooks);
 
 // Detail d'un livre
 router.get('/:id', validateId, bookController.getBookById);
+
+// Demandes recues sur un de mes livres (proprietaire uniquement)
+router.get('/:id/requests', validateId, requestController.getRequestsForBook);
 
 // Creer — Multer AVANT Zod (form-data doit etre parse avant validation)
 router.post('/', uploadSingle('image'), validate(createBookSchema), bookController.createBook);
