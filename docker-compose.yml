@@ -1,0 +1,39 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: bookswap-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: bookswap
+      POSTGRES_PASSWORD: bookswap
+      POSTGRES_DB: bookswap
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U bookswap -d bookswap']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  api:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: bookswap-api
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    env_file:
+      - ./server/.env
+    environment:
+      DATABASE_URL: postgresql://bookswap:bookswap@postgres:5432/bookswap
+      PORT: 3000
+    ports:
+      - '3000:3000'
+    command: sh -c "npx prisma migrate deploy && node dist/index.js"
+
+volumes:
+  postgres_data:

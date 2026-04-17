@@ -287,10 +287,30 @@ npm run dev
 npm run build
 npm start
 
-# Docker
+# Docker (image seule)
 docker build -t bookswap-api .
 docker run -p 3000:3000 --env-file .env bookswap-api
 ```
+
+### Docker Compose (dev local complet)
+
+Depuis la racine du projet :
+
+```bash
+# Demarrer Postgres + API
+docker compose up -d
+
+# Logs de l'API
+docker compose logs -f api
+
+# Demarrer uniquement Postgres (si on lance l'API avec npm run dev)
+docker compose up -d postgres
+
+# Arret
+docker compose down
+```
+
+Le compose applique automatiquement les migrations Prisma au demarrage (`prisma migrate deploy`).
 
 ### Qualite de code
 
