@@ -4,6 +4,7 @@ import helmet from 'helmet';
 import compression from 'compression';
 import { env } from './config/env';
 import { globalLimiter } from './middleware/rateLimiter';
+import { requestLogger } from './middleware/requestLogger';
 import { errorHandler, AppError } from './middleware/errorHandler';
 import { prisma } from './lib/prisma';
 import swaggerUi from 'swagger-ui-express';
@@ -24,6 +25,7 @@ app.use(compression());
 app.use(cors({ origin: env.CORS_ORIGIN, credentials: true }));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(requestLogger);
 app.use(globalLimiter);
 
 // ── Documentation API ──
