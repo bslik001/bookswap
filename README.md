@@ -16,6 +16,41 @@ Application mobile d'echange de livres scolaires. Les eleves et parents publient
 | [Maquettes](maquettes.html) | 12 ecrans interactifs (ouvrir dans un navigateur en mode mobile) |
 | **API interactive** | Swagger UI disponible sur `/api/docs` une fois le serveur lance |
 
+## Architecture
+
+```mermaid
+flowchart LR
+    Client["Client mobile<br/>(React Native)"]
+
+    subgraph API["Express API (Node 18)"]
+        direction TB
+        MW["Middleware chain<br/>helmet · compression · cors<br/>pino-http (x-request-id)<br/>rate-limiter · Zod validate"]
+        Routes["Routes<br/>/auth · /users · /books<br/>/requests · /supplies<br/>/notifications · /admin<br/>/health · /docs"]
+        Errors["errorHandler<br/>(AppError · Zod · Prisma)"]
+        MW --> Routes --> Errors
+    end
+
+    subgraph Data["Persistance"]
+        Prisma["Prisma Client"]
+        PG[("PostgreSQL 16<br/>tsvector + index GIN")]
+        Prisma --> PG
+    end
+
+    subgraph External["Services externes"]
+        Cloud["Cloudinary<br/>(images)"]
+        FCM["Firebase FCM<br/>(push)"]
+        AT["Africa's Talking<br/>(SMS OTP)"]
+    end
+
+    Client -- HTTPS/JSON --> MW
+    Routes --> Prisma
+    Routes --> Cloud
+    Routes --> FCM
+    Routes --> AT
+```
+
+Le diagramme represente le flux d'une requete : le client mobile attaque l'API Express, qui passe par une chaine de middlewares (securite, observabilite, validation) avant d'atteindre les routes metier. Les controllers delegue a Prisma pour la base et aux SDK externes pour les images, les push et les SMS.
+
 ## Stack technique
 
 | Couche | Technologies |
