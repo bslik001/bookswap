@@ -10,9 +10,13 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio",
+    "prisma:seed": "ts-node-dev --transpile-only prisma/seed.ts",
     "lint": "eslint src/ --ext .ts",
     "lint:fix": "eslint src/ --ext .ts --fix",
     "format": "prettier --write src/"
+  },
+  "prisma": {
+    "seed": "ts-node-dev --transpile-only prisma/seed.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.6.0",

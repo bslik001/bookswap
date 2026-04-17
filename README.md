@@ -273,9 +273,15 @@ createdb bookswap
 # Appliquer les migrations
 npx prisma migrate dev
 
+# Remplir la base avec des donnees de demo
+npm run prisma:seed
+
 # Visualiser les donnees
 npx prisma studio
 ```
+
+**Donnees de seed :** 1 admin, 2 fournisseurs, 5 utilisateurs, 10 livres, 3 demandes, 4 fournitures.
+Mot de passe par defaut : `Password123!` — comptes : `admin@bookswap.sn`, `user1@bookswap.sn`...`user5@bookswap.sn`.
 
 ### Lancement
 
