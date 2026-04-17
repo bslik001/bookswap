@@ -14,6 +14,7 @@ Application mobile d'echange de livres scolaires. Les eleves et parents publient
 | [Cahier d'analyse](CAHIER_ANALYSE.md) | Analyse detaillee : cas d'utilisation, modele de donnees, regles de gestion |
 | [Cahier de conception](CAHIER_CONCEPTION.md) | Architecture technique, schema Prisma, contrats API, specs UI |
 | [Maquettes](maquettes.html) | 12 ecrans interactifs (ouvrir dans un navigateur en mode mobile) |
+| [CHANGELOG](CHANGELOG.md) | Historique des versions et changements |
 | **API interactive** | Swagger UI disponible sur `/api/docs` une fois le serveur lance |
 
 ## Architecture
