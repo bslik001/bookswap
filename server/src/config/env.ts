@@ -30,13 +30,21 @@ const envSchema = z.object({
   PORT: z.string().transform(Number).pipe(z.number().int().positive()),
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   CORS_ORIGIN: z.string().min(1),
+
+  // Observabilite (optionnel)
+  SENTRY_DSN: z.string().url().optional(),
+  SENTRY_TRACES_SAMPLE_RATE: z
+    .string()
+    .optional()
+    .transform((v) => (v === undefined ? 0 : Number(v)))
+    .pipe(z.number().min(0).max(1)),
 });
 
 const parsed = envSchema.safeParse(process.env);
 
 if (!parsed.success) {
   // Logger not available yet (depends on env), use stderr directly
-  process.stderr.write('Variables d\'environnement invalides:\n');
+  process.stderr.write("Variables d'environnement invalides:\n");
   process.stderr.write(JSON.stringify(parsed.error.flatten().fieldErrors, null, 2) + '\n');
   process.exit(1);
 }

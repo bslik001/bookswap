@@ -2,7 +2,9 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import compression from 'compression';
+import * as Sentry from '@sentry/node';
 import { env } from './config/env';
+import { isSentryEnabled } from './config/sentry';
 import { globalLimiter } from './middleware/rateLimiter';
 import { requestLogger } from './middleware/requestLogger';
 import { errorHandler, AppError } from './middleware/errorHandler';
@@ -29,10 +31,14 @@ app.use(requestLogger);
 app.use(globalLimiter);
 
 // ── Documentation API ──
-app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
-  customSiteTitle: 'BookSwap API',
-  customCss: '.swagger-ui .topbar { display: none }',
-}));
+app.use(
+  '/api/docs',
+  swaggerUi.serve,
+  swaggerUi.setup(swaggerSpec, {
+    customSiteTitle: 'BookSwap API',
+    customCss: '.swagger-ui .topbar { display: none }',
+  }),
+);
 app.get('/api/docs.json', (_req, res) => res.json(swaggerSpec));
 
 // ── Health checks ──
@@ -47,7 +53,11 @@ app.get('/api/health/ready', async (_req, res) => {
   } catch {
     res.status(503).json({
       success: false,
-      error: { code: 'SERVICE_UNAVAILABLE', message: 'Base de donnees inaccessible', database: 'disconnected' },
+      error: {
+        code: 'SERVICE_UNAVAILABLE',
+        message: 'Base de donnees inaccessible',
+        database: 'disconnected',
+      },
     });
   }
 });
@@ -66,6 +76,11 @@ app.use('/api/notifications', notificationRoutes);
 app.use((_req, _res, next) => {
   next(new AppError(404, 'NOT_FOUND', 'Route introuvable'));
 });
+
+// ── Sentry : capture automatique des erreurs avant notre handler (si active) ──
+if (isSentryEnabled()) {
+  Sentry.setupExpressErrorHandler(app);
+}
 
 // ── Gestionnaire d'erreurs global (toujours en dernier) ──
 app.use(errorHandler);

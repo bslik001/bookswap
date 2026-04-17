@@ -305,6 +305,8 @@ npm install
 | `PORT` | Port du serveur (defaut: 3000) |
 | `NODE_ENV` | `development` / `production` / `test` |
 | `CORS_ORIGIN` | Origine autorisee pour CORS |
+| `SENTRY_DSN` | *(optionnel)* DSN Sentry — active le reporting d'erreurs si defini |
+| `SENTRY_TRACES_SAMPLE_RATE` | *(optionnel)* taux d'echantillonnage des traces (0 a 1, defaut 0) |
 
 ### Base de donnees
 

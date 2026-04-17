@@ -14,8 +14,8 @@
   },
   "lint-staged": {
     "server/**/*.ts": [
-      "bash -c 'cd server && npx eslint --fix'",
-      "bash -c 'cd server && npx prettier --write'"
+      "bash -c 'cd server && npx eslint --fix \"$@\"' --",
+      "bash -c 'cd server && npx prettier --write \"$@\"' --"
     ]
   },
   "commitlint": {
