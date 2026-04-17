@@ -8,7 +8,7 @@ export const sendPushNotification = async (
   title: string,
   body: string
 ): Promise<void> => {
-  if (env.NODE_ENV === 'development') {
+  if (env.NODE_ENV === 'development' || env.NODE_ENV === 'test') {
     logger.info({ token: fcmToken.slice(0, 20), title, body }, '[PUSH DEV] Notification');
     return;
   }

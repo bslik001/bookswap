@@ -17,7 +17,10 @@ export const generateAccessToken = (payload: AccessTokenPayload): string =>
   jwt.sign(payload, env.JWT_ACCESS_SECRET, { expiresIn: '15m' });
 
 export const generateRefreshToken = (payload: RefreshTokenPayload): string =>
-  jwt.sign(payload, env.JWT_REFRESH_SECRET, { expiresIn: '7d' });
+  jwt.sign(payload, env.JWT_REFRESH_SECRET, {
+    expiresIn: '7d',
+    jwtid: crypto.randomUUID(),
+  });
 
 export const verifyAccessToken = (token: string): AccessTokenPayload =>
   jwt.verify(token, env.JWT_ACCESS_SECRET) as AccessTokenPayload;

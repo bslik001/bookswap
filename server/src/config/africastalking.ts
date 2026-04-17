@@ -2,9 +2,9 @@ import AfricasTalkingSDK from 'africastalking';
 import { env } from './env';
 import { logger } from './logger';
 
-// En dev, on log l'OTP en console au lieu d'envoyer un SMS
+// En dev/test, on log l'OTP au lieu d'envoyer un SMS
 export const sendSms = async (to: string, message: string): Promise<void> => {
-  if (env.NODE_ENV === 'development') {
+  if (env.NODE_ENV === 'development' || env.NODE_ENV === 'test') {
     logger.info({ to, message }, '[SMS DEV] OTP envoye');
     return;
   }
