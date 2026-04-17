@@ -1,0 +1,26 @@
+{
+  "name": "bookswap",
+  "private": true,
+  "description": "BookSwap monorepo — dev tooling (hooks, commit-msg) at root",
+  "scripts": {
+    "prepare": "husky",
+    "lint-staged": "lint-staged"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^19.6.1",
+    "@commitlint/config-conventional": "^19.6.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^15.3.0"
+  },
+  "lint-staged": {
+    "server/**/*.ts": [
+      "bash -c 'cd server && npx eslint --fix'",
+      "bash -c 'cd server && npx prettier --write'"
+    ]
+  },
+  "commitlint": {
+    "extends": [
+      "@commitlint/config-conventional"
+    ]
+  }
+}

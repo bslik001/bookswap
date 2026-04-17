@@ -346,6 +346,17 @@ npm run test:watch
 npm run check
 ```
 
+**Hooks Git automatiques** (via Husky) :
+- `pre-commit` → lint-staged (ESLint --fix + Prettier sur les fichiers stages)
+- `commit-msg` → commitlint (Conventional Commits obligatoire)
+
+Installation des hooks apres un clone :
+
+```bash
+# Depuis la racine
+npm install
+```
+
 ### Verification
 
 ```bash
