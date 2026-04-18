@@ -1,3 +1,4 @@
+import path from 'path';
 import swaggerJsdoc from 'swagger-jsdoc';
 
 const options: swaggerJsdoc.Options = {
@@ -6,11 +7,9 @@ const options: swaggerJsdoc.Options = {
     info: {
       title: 'BookSwap API',
       version: '1.0.0',
-      description: 'API REST pour l\'application d\'echange de livres scolaires BookSwap',
+      description: "API REST pour l'application d'echange de livres scolaires BookSwap",
     },
-    servers: [
-      { url: '/api', description: 'API BookSwap' },
-    ],
+    servers: [{ url: '/api', description: 'API BookSwap' }],
     components: {
       securitySchemes: {
         bearerAuth: {
@@ -92,7 +91,9 @@ const options: swaggerJsdoc.Options = {
       },
     },
   },
-  apis: ['./src/docs/*.ts'],
+  // Chemin resolu depuis le fichier courant pour marcher en dev (src/*.ts)
+  // comme en prod (dist/*.js apres `tsc`, qui preserve les JSDoc).
+  apis: [path.join(__dirname, '../docs/*.ts'), path.join(__dirname, '../docs/*.js')],
 };
 
 export const swaggerSpec = swaggerJsdoc(options);
