@@ -455,3 +455,34 @@ Le pipeline GitHub Actions s'execute sur chaque push et PR vers `main` :
 3. **npm run lint** — ESLint (zero warnings autorise)
 4. **npx tsc --noEmit** — verification TypeScript
 5. **npx prisma validate** — validation du schema Prisma
+
+## Deploiement
+
+Le projet est pret a etre deploye sur [Render](https://render.com) via le
+blueprint [render.yaml](render.yaml) a la racine.
+
+### Premiere fois
+
+1. Creer un compte Render et connecter le repo GitHub
+2. **New** > **Blueprint** > selectionner ce repo
+3. Render detecte [render.yaml](render.yaml) et propose :
+   - une base **PostgreSQL 16** (plan free)
+   - un **web service Docker** (plan free, region Frankfurt, healthcheck sur `/api/health`)
+4. Remplir dans le dashboard les secrets marques `sync: false` :
+   - `CORS_ORIGIN` — URL du frontend (ex: `https://bookswap.expo.app`)
+   - Cloudinary : `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`
+   - Firebase : `FIREBASE_PROJECT_ID`, `FIREBASE_PRIVATE_KEY`, `FIREBASE_CLIENT_EMAIL`
+   - Africa's Talking : `AT_API_KEY`, `AT_USERNAME`, `AT_SENDER_ID`
+   - *(optionnel)* `SENTRY_DSN` pour le reporting d'erreurs
+5. `DATABASE_URL`, `JWT_ACCESS_SECRET` et `JWT_REFRESH_SECRET` sont injectes
+   automatiquement (connexion Postgres interne + secrets generes par Render)
+6. Le service se deploie : `prisma migrate deploy` puis `node dist/index.js`
+
+### Deploiements suivants
+
+Chaque push sur `main` redeploie automatiquement (CI GitHub Actions valide
+avant, Render build l'image Docker et redemarre le service).
+
+> Le plan free a un **cold start d'environ 30s** apres 15 min d'inactivite.
+> Pour un usage demo/jury c'est acceptable ; pour de la production passer
+> au plan starter ($7/mois).

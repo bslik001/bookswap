@@ -14,6 +14,10 @@ et le projet suit une versioning [SemVer](https://semver.org/lang/fr/).
   minimal (juste `openssl` pour Prisma) et bind-mounte le source et les
   `node_modules` de l'hote — pas de `npm ci` dans le conteneur, ce qui rend
   le build instantane et robuste meme sur reseau lent/flaky.
+- **Blueprint Render ([render.yaml](render.yaml))** pour deploiement en un
+  clic : Postgres managee + web service Docker + healthcheck, avec
+  generation automatique des secrets JWT et injection auto de `DATABASE_URL`.
+  Section "Deploiement" ajoutee au README avec la procedure complete.
 
 ### Modifie
 

@@ -1,0 +1,78 @@
+# Blueprint Render pour l'API BookSwap.
+#
+# Usage :
+#   1. Creer un compte sur https://render.com
+#   2. "New" > "Blueprint" > selectionner ce repo
+#   3. Render detecte ce fichier et propose de creer les services
+#   4. Remplir les secrets marques `sync: false` dans le dashboard
+#
+# Doc : https://render.com/docs/blueprint-spec
+
+databases:
+  - name: bookswap-db
+    databaseName: bookswap
+    user: bookswap
+    plan: free
+    postgresMajorVersion: '16'
+
+services:
+  - type: web
+    name: bookswap-api
+    runtime: docker
+    repo: https://github.com/bslik001/bookswap
+    branch: main
+    rootDir: server
+    dockerfilePath: ./Dockerfile
+    plan: free
+    region: frankfurt
+    healthCheckPath: /api/health
+    envVars:
+      # DB : injecte automatiquement l'URL interne de la base ci-dessus
+      - key: DATABASE_URL
+        fromDatabase:
+          name: bookswap-db
+          property: connectionString
+
+      # App
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: '3000'
+      - key: CORS_ORIGIN
+        sync: false   # a remplir dans le dashboard (URL du frontend)
+
+      # JWT : generes automatiquement par Render (min 32 char)
+      - key: JWT_ACCESS_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+
+      # Cloudinary (a remplir dans le dashboard)
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+
+      # Firebase (a remplir dans le dashboard)
+      - key: FIREBASE_PROJECT_ID
+        sync: false
+      - key: FIREBASE_PRIVATE_KEY
+        sync: false
+      - key: FIREBASE_CLIENT_EMAIL
+        sync: false
+
+      # Africa's Talking (a remplir dans le dashboard)
+      - key: AT_API_KEY
+        sync: false
+      - key: AT_USERNAME
+        sync: false
+      - key: AT_SENDER_ID
+        sync: false
+
+      # Observabilite (optionnel)
+      - key: SENTRY_DSN
+        sync: false
+      - key: SENTRY_TRACES_SAMPLE_RATE
+        value: '0.1'
