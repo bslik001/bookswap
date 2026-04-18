@@ -10,7 +10,7 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio",
-    "prisma:seed": "ts-node-dev --transpile-only prisma/seed.ts",
+    "prisma:seed": "tsx prisma/seed.ts",
     "test": "vitest run",
     "test:watch": "vitest",
     "lint": "eslint src/ --ext .ts",
@@ -23,12 +23,11 @@
     "node": ">=20.12"
   },
   "prisma": {
-    "seed": "ts-node-dev --transpile-only prisma/seed.ts"
+    "seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.6.0",
     "@sentry/node": "^10.49.0",
-    "prisma": "^6.6.0",
     "africastalking": "^0.7.0",
     "bcrypt": "^5.1.1",
     "cloudinary": "^2.5.1",
@@ -43,8 +42,10 @@
     "multer": "^1.4.5-lts.1",
     "pino": "^10.3.1",
     "pino-http": "^11.0.0",
+    "prisma": "^6.6.0",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1",
+    "tsx": "^4.21.0",
     "zod": "^3.24.2"
   },
   "devDependencies": {
