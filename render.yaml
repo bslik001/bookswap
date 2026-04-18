@@ -14,6 +14,7 @@ databases:
     user: bookswap
     plan: free
     postgresMajorVersion: '16'
+    region: frankfurt   # DOIT matcher la region du web service ci-dessous
 
 services:
   - type: web
