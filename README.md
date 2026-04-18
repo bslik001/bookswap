@@ -13,6 +13,7 @@ Application mobile d'echange de livres scolaires. Les eleves et parents publient
 | [Cahier des charges](📘%20Cahier%20des%20charges%20books.pdf) | Specifications fonctionnelles initiales |
 | [Cahier d'analyse](CAHIER_ANALYSE.md) | Analyse detaillee : cas d'utilisation, modele de donnees, regles de gestion |
 | [Cahier de conception](CAHIER_CONCEPTION.md) | Architecture technique, schema Prisma, contrats API, specs UI |
+| [Cahier de conception frontend](CAHIER_CONCEPTION_FRONTEND.md) | Architecture mobile React Native/Expo, structure, ecrans, strategies transverses |
 | [Maquettes](maquettes.html) | 12 ecrans interactifs (ouvrir dans un navigateur en mode mobile) |
 | [CHANGELOG](CHANGELOG.md) | Historique des versions et changements |
 | **API interactive** | Swagger UI disponible sur `/api/docs` une fois le serveur lance |
