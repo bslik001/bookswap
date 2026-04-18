@@ -1,14 +1,21 @@
 # Image de production de l'API BookSwap.
 #
 # Pour le dev local, utiliser plutot :
-#   - docker compose up -d  (lance Postgres seulement)
-#   - npm run dev           (lance l'API avec hot reload)
+#   - docker compose up -d  (lance Postgres + API en hot reload)
+#   - npm run dev           (lance l'API avec hot reload, sans Docker)
 #
 # Ce Dockerfile est destine a un deploiement (Render, Fly.io, Railway, etc.)
 # sur un reseau stable. Sur un reseau lent/flaky, le `npm ci` peut timeout.
 
 # ── Build ──
 FROM node:22-bookworm-slim AS builder
+
+# openssl est requis DES le builder pour que `prisma generate` detecte la
+# bonne version (debian-openssl-3.0.x) et genere le bon engine. Sans lui,
+# Prisma fallback sur openssl-1.1.x et le runtime tente un download.
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends openssl ca-certificates \
+  && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
@@ -43,10 +50,12 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 
-COPY --from=builder /app/package*.json ./
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/prisma ./prisma
-COPY --from=builder /app/dist ./dist
+# --chown=node:node pour que l'utilisateur final puisse ecrire dans node_modules
+# (certains engines Prisma peuvent ecrire des caches au premier run)
+COPY --from=builder --chown=node:node /app/package*.json ./
+COPY --from=builder --chown=node:node /app/node_modules ./node_modules
+COPY --from=builder --chown=node:node /app/prisma ./prisma
+COPY --from=builder --chown=node:node /app/dist ./dist
 
 # Utilisateur non-root fourni par l'image officielle
 USER node
