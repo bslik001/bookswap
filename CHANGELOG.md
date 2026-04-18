@@ -7,6 +7,21 @@ et le projet suit une versioning [SemVer](https://semver.org/lang/fr/).
 
 ## [Non publie]
 
+### Ajouts
+
+- **Stack Docker Compose complete (Postgres + API)** avec hot reload. Le
+  service `api` utilise un nouveau [Dockerfile.dev](server/Dockerfile.dev)
+  minimal (juste `openssl` pour Prisma) et bind-mounte le source et les
+  `node_modules` de l'hote — pas de `npm ci` dans le conteneur, ce qui rend
+  le build instantane et robuste meme sur reseau lent/flaky.
+
+### Modifie
+
+- **Dockerfile (production)** : nettoyage et ajout de `openssl` +
+  `ca-certificates` dans l'image runtime pour que la detection de version
+  OpenSSL des engines Prisma fonctionne sur `bookworm-slim`. Sans le binaire
+  `openssl`, Prisma tombait silencieusement sur le mauvais binaire d'engine.
+
 ## [0.1.0] — 2026-04-17
 
 Premiere version de l'API backend BookSwap. Couvre l'ensemble des regles de gestion

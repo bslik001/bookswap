@@ -20,19 +20,28 @@ services:
   api:
     build:
       context: ./server
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.dev
+      # Contourne le DNS du daemon Docker (cf. apt-get dans Dockerfile.dev)
+      network: host
     container_name: bookswap-api
     restart: unless-stopped
-    depends_on:
-      postgres:
-        condition: service_healthy
     env_file:
       - ./server/.env
     environment:
+      # Override l'URL Postgres pour pointer sur le service compose
       DATABASE_URL: postgresql://bookswap:bookswap@postgres:5432/bookswap
-      PORT: 3000
+      NODE_ENV: development
+      PORT: '3000'
     ports:
       - '3000:3000'
+    volumes:
+      # Bind-mount du source : hot reload via ts-node-dev
+      - ./server:/app
+      # Volume anonyme pour ne PAS masquer le node_modules de l'hote
+      # (on veut justement reutiliser celui de l'hote, donc pas de "- /app/node_modules")
+    depends_on:
+      postgres:
+        condition: service_healthy
 
 volumes:
   postgres_data:

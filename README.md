@@ -330,38 +330,51 @@ Mot de passe par defaut : `Password123!` — comptes : `admin@bookswap.sn`, `use
 
 ### Lancement
 
-```bash
-# Developpement (hot reload)
-npm run dev
-
-# Production
-npm run build
-npm start
-
-# Docker (image seule)
-docker build -t bookswap-api .
-docker run -p 3000:3000 --env-file .env bookswap-api
-```
-
-### Docker Compose (dev local complet)
-
-Depuis la racine du projet :
+**Option 1 — Tout en Docker (Postgres + API avec hot reload)**
 
 ```bash
-# Demarrer Postgres + API
+# Pre-requis (une fois) : installer node_modules sur l'hote
+cd server && npm ci && cd ..
+
+# Lancer la stack complete
 docker compose up -d
 
-# Logs de l'API
+# Logs API
 docker compose logs -f api
-
-# Demarrer uniquement Postgres (si on lance l'API avec npm run dev)
-docker compose up -d postgres
 
 # Arret
 docker compose down
 ```
 
-Le compose applique automatiquement les migrations Prisma au demarrage (`prisma migrate deploy`).
+Le service `api` utilise [Dockerfile.dev](server/Dockerfile.dev) : il monte
+le source et les `node_modules` de l'hote en bind-mount, ce qui evite tout
+`npm ci` dans le conteneur (rapide, robuste sur reseau lent) et garde le
+hot reload via `ts-node-dev`.
+
+**Option 2 — Postgres en Docker, API en local**
+
+```bash
+docker compose up -d postgres
+cd server && npm run dev
+```
+
+**Production : build standalone**
+
+Le [Dockerfile](server/Dockerfile) (sans `.dev`) construit une image autonome
+pour un deploiement (Render, Fly.io, Railway, etc.) : il execute `npm ci`
+puis `prisma migrate deploy` au demarrage. Il assume un reseau stable.
+
+```bash
+cd server
+docker build -t bookswap-api .
+docker run -p 3000:3000 --env-file .env bookswap-api
+```
+
+```bash
+# Build local sans Docker
+npm run build
+npm start
+```
 
 ### Qualite de code
 

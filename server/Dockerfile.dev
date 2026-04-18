@@ -1,0 +1,25 @@
+# Image de dev pour l'API BookSwap.
+#
+# Approche : on monte le source ET les node_modules de l'hote en bind-mount,
+# donc pas de `npm ci` dans le build (rapide, et evite les soucis de reseau).
+#
+# Pre-requis cote hote (une fois) :
+#   cd server && npm ci
+#
+# openssl/ca-certificates sont installes car les engines Prisma detectent la
+# version d'OpenSSL via ce binaire (sans lui, Prisma tombe sur le mauvais
+# engine et tente un download). Le build utilise network: host (voir
+# docker-compose.yml) pour contourner le DNS du daemon Docker.
+
+FROM node:22-bookworm-slim
+
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends openssl ca-certificates \
+  && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+EXPOSE 3000
+
+# Migrations Prisma puis serveur en hot reload (ts-node-dev).
+CMD ["sh", "-c", "npx prisma migrate deploy && npm run dev"]
