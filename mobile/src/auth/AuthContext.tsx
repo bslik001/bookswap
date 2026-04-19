@@ -24,6 +24,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const applySession = useCallback(async (result: LoginResult) => {
     authStore.setAccessToken(result.accessToken);
     await tokenStorage.setRefresh(result.refreshToken);
+    await tokenStorage.setUser(result.user);
     setUser(result.user);
     setStatus('authenticated');
   }, []);
@@ -31,25 +32,45 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const clearSession = useCallback(async () => {
     authStore.setAccessToken(null);
     await tokenStorage.clearRefresh();
+    await tokenStorage.clearUser();
     setUser(null);
     setStatus('unauthenticated');
   }, []);
 
-  // Bootstrap : on essaie de refresh si on a un refresh token persiste
+  // Bootstrap : on a un refresh token + un user en cache → on tente un refresh
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const refresh = await tokenStorage.getRefresh();
-      if (!refresh) {
+      const [refresh, cachedUser] = await Promise.all([
+        tokenStorage.getRefresh(),
+        tokenStorage.getUser(),
+      ]);
+      if (!refresh || !cachedUser) {
         if (!cancelled) setStatus('unauthenticated');
         return;
       }
-      // Le client se charge du refresh ; on tente un endpoint /me a venir.
-      // En attendant, on considere qu'avoir un refresh = session a confirmer
-      // au premier appel API. On force "unauthenticated" sans user pour que
-      // le user se reconnecte. Phase 3 ajoutera /auth/me ou un GET initial.
-      authStore.setAccessToken(null);
-      if (!cancelled) setStatus('unauthenticated');
+      // Tente de rafraichir l'access via le client (qui gere le mutex)
+      try {
+        const res = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/auth/refresh-token`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ refreshToken: refresh }),
+        });
+        const json = await res.json();
+        if (!res.ok || !json.success) throw new Error('refresh failed');
+        authStore.setAccessToken(json.data.accessToken);
+        await tokenStorage.setRefresh(json.data.refreshToken);
+        if (!cancelled) {
+          setUser(cachedUser);
+          setStatus('authenticated');
+        }
+      } catch {
+        if (!cancelled) {
+          await tokenStorage.clearRefresh();
+          await tokenStorage.clearUser();
+          setStatus('unauthenticated');
+        }
+      }
     })();
     return () => {
       cancelled = true;

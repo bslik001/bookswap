@@ -5,7 +5,7 @@ export default function AuthLayout() {
   const { status } = useAuth();
 
   if (status === 'authenticated') {
-    return <Redirect href="/(app)" />;
+    return <Redirect href="/(app)/(tabs)" />;
   }
 
   return <Stack screenOptions={{ headerShown: false }} />;
