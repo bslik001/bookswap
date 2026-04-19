@@ -1,10 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
+import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import {
   ActivityIndicator,
   Alert,
   FlatList,
-  Image,
   Pressable,
   RefreshControl,
   StyleSheet,
@@ -113,7 +113,13 @@ function BookRow({
       style={({ pressed }) => [styles.row, pressed && styles.rowPressed]}
     >
       {book.imageUrl ? (
-        <Image source={{ uri: book.imageUrl }} style={styles.thumb} />
+        <Image
+          source={book.imageUrl}
+          style={styles.thumb}
+          contentFit="cover"
+          cachePolicy="memory-disk"
+          transition={150}
+        />
       ) : (
         <View style={[styles.thumb, styles.thumbPlaceholder]} />
       )}

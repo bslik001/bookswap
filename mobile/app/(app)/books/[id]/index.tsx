@@ -1,6 +1,7 @@
+import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
-import { ActivityIndicator, Alert, Image, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, StyleSheet, Text, View } from 'react-native';
 import { useAuth } from '@/auth/AuthContext';
 import { Button, ErrorBanner, Screen } from '@/components/ui';
 import { useBook } from '@/hooks/useBooks';
@@ -54,7 +55,13 @@ export default function BookDetailScreen() {
   return (
     <Screen scrollable>
       {book.imageUrl ? (
-        <Image source={{ uri: book.imageUrl }} style={styles.image} resizeMode="cover" />
+        <Image
+          source={book.imageUrl}
+          style={styles.image}
+          contentFit="cover"
+          cachePolicy="memory-disk"
+          transition={200}
+        />
       ) : (
         <View style={[styles.image, styles.placeholder]}>
           <Text style={styles.placeholderText}>Sans image</Text>

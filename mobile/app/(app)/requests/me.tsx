@@ -1,8 +1,8 @@
+import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import {
   ActivityIndicator,
   FlatList,
-  Image,
   Pressable,
   RefreshControl,
   StyleSheet,
@@ -61,7 +61,13 @@ function RequestRow({ item, onPress }: { item: MyRequest; onPress: () => void })
       style={({ pressed }) => [styles.row, pressed && styles.pressed]}
     >
       {item.book.imageUrl ? (
-        <Image source={{ uri: item.book.imageUrl }} style={styles.thumb} />
+        <Image
+          source={item.book.imageUrl}
+          style={styles.thumb}
+          contentFit="cover"
+          cachePolicy="memory-disk"
+          transition={150}
+        />
       ) : (
         <View style={[styles.thumb, styles.thumbPlaceholder]} />
       )}

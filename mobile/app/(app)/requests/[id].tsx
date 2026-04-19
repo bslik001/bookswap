@@ -1,6 +1,7 @@
+import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
-import { ActivityIndicator, Alert, Image, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, StyleSheet, Text, View } from 'react-native';
 import { useAuth } from '@/auth/AuthContext';
 import { Button, ErrorBanner, Screen, StatusBadge } from '@/components/ui';
 import { useCancelRequest, useRequest } from '@/hooks/useRequests';
@@ -63,7 +64,13 @@ export default function RequestDetailScreen() {
 
       <View style={styles.bookCard}>
         {request.book.imageUrl ? (
-          <Image source={{ uri: request.book.imageUrl }} style={styles.thumb} />
+          <Image
+            source={request.book.imageUrl}
+            style={styles.thumb}
+            contentFit="cover"
+            cachePolicy="memory-disk"
+            transition={150}
+          />
         ) : (
           <View style={[styles.thumb, styles.thumbPlaceholder]} />
         )}

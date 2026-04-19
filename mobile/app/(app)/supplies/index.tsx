@@ -1,9 +1,9 @@
+import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
-  Image,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -115,7 +115,13 @@ function SupplyRow({ item, onPress }: { item: Supply; onPress: () => void }) {
       style={({ pressed }) => [styles.row, pressed && styles.rowPressed]}
     >
       {item.imageUrl ? (
-        <Image source={{ uri: item.imageUrl }} style={styles.thumb} />
+        <Image
+          source={item.imageUrl}
+          style={styles.thumb}
+          contentFit="cover"
+          cachePolicy="memory-disk"
+          transition={150}
+        />
       ) : (
         <View style={[styles.thumb, styles.thumbPlaceholder]} />
       )}

@@ -1,4 +1,5 @@
-import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Image } from 'expo-image';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { colors, radius, spacing, typography } from '@/theme';
 import type { Book } from '@/types/book';
 
@@ -20,7 +21,13 @@ export function BookCard({ book, onPress }: BookCardProps) {
     >
       <View style={styles.imageWrapper}>
         {book.imageUrl ? (
-          <Image source={{ uri: book.imageUrl }} style={styles.image} />
+          <Image
+            source={book.imageUrl}
+            style={styles.image}
+            contentFit="cover"
+            cachePolicy="memory-disk"
+            transition={150}
+          />
         ) : (
           <View style={[styles.image, styles.imagePlaceholder]}>
             <Text style={styles.imagePlaceholderText}>Sans image</Text>
