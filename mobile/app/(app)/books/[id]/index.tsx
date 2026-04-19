@@ -1,7 +1,10 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { ActivityIndicator, Image, StyleSheet, Text, View } from 'react-native';
+import { useState } from 'react';
+import { ActivityIndicator, Alert, Image, StyleSheet, Text, View } from 'react-native';
+import { useAuth } from '@/auth/AuthContext';
 import { Button, ErrorBanner, Screen } from '@/components/ui';
 import { useBook } from '@/hooks/useBooks';
+import { useCreateRequest } from '@/hooks/useRequests';
 import { colors, radius, spacing, typography } from '@/theme';
 import { apiErrorMessage } from '@/utils/apiErrorMessage';
 
@@ -15,7 +18,21 @@ const statusLabel = {
 export default function BookDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
+  const { user } = useAuth();
   const { data: book, isLoading, error } = useBook(id ?? '');
+  const createRequest = useCreateRequest();
+  const [requestError, setRequestError] = useState<string | null>(null);
+
+  const onRequest = () => {
+    if (!book) return;
+    setRequestError(null);
+    createRequest.mutate(book.id, {
+      onSuccess: () => {
+        Alert.alert('Demande envoyee', 'Le proprietaire sera notifie.');
+      },
+      onError: (err) => setRequestError(apiErrorMessage(err)),
+    });
+  };
 
   if (isLoading) {
     return (
@@ -67,14 +84,29 @@ export default function BookDetailScreen() {
         </Text>
       </View>
 
+      {requestError ? <ErrorBanner message={requestError} /> : null}
+
       <View style={styles.actions}>
-        <Button
-          label={book.hasRequested ? 'Demande deja envoyee' : 'Demander ce livre'}
-          disabled={book.hasRequested || book.status !== 'AVAILABLE'}
-          onPress={() => {
-            // Phase 5 : creation de demande
-          }}
-        />
+        {user?.id === book.ownerId ? (
+          <Button
+            label="Voir les demandes recues"
+            variant="secondary"
+            onPress={() => router.push(`/books/${book.id}/requests`)}
+          />
+        ) : (
+          <Button
+            label={
+              book.hasRequested
+                ? 'Demande deja envoyee'
+                : book.status !== 'AVAILABLE'
+                  ? 'Livre indisponible'
+                  : 'Demander ce livre'
+            }
+            disabled={book.hasRequested || book.status !== 'AVAILABLE'}
+            loading={createRequest.isPending}
+            onPress={onRequest}
+          />
+        )}
       </View>
     </Screen>
   );

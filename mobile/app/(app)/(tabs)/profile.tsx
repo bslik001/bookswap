@@ -1,9 +1,11 @@
+import { useRouter } from 'expo-router';
 import { StyleSheet, Text, View } from 'react-native';
 import { useAuth } from '@/auth/AuthContext';
 import { Button, Screen } from '@/components/ui';
 import { colors, radius, spacing, typography } from '@/theme';
 
 export default function ProfileScreen() {
+  const router = useRouter();
   const { user, logout } = useAuth();
 
   return (
@@ -24,6 +26,10 @@ export default function ProfileScreen() {
         <Text style={styles.sectionTitle}>Coordonnees</Text>
         <Row label="Email" value={user?.email ?? '—'} />
         <Row label="Telephone" value={user?.phone ?? '—'} />
+      </View>
+
+      <View style={styles.actions}>
+        <Button label="Mes demandes" onPress={() => router.push('/requests/me')} />
       </View>
 
       <View style={styles.actions}>
