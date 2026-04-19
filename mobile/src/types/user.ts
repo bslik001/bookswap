@@ -7,6 +7,11 @@ export type User = {
   email: string;
   phone: string;
   role: Role;
+  address?: string;
+  gradeInterests?: string[];
+  isActive?: boolean;
+  isPhoneVerified?: boolean;
+  createdAt?: string;
 };
 
 export type AuthTokens = {
