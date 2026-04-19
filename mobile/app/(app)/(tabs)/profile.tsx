@@ -33,7 +33,15 @@ export default function ProfileScreen() {
       </View>
 
       <View style={styles.actions}>
-        <Button label="Se deconnecter" variant="secondary" onPress={logout} />
+        <Button
+          label="Fournitures scolaires"
+          variant="secondary"
+          onPress={() => router.push('/supplies')}
+        />
+      </View>
+
+      <View style={styles.actions}>
+        <Button label="Se deconnecter" variant="ghost" onPress={logout} />
       </View>
     </Screen>
   );
