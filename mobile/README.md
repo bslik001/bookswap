@@ -2,16 +2,74 @@
 
 App React Native / Expo qui consomme l'[API BookSwap](../server). Cf.
 [CAHIER_CONCEPTION_FRONTEND.md](../CAHIER_CONCEPTION_FRONTEND.md) pour la
-conception detaillee (architecture, ecrans, strategies transverses).
+conception detaillee (architecture, ecrans, strategies transverses) et le
+[README racine](../README.md) pour la vue d'ensemble du projet.
 
 ## Stack
 
-- **Expo SDK 54** + React Native 0.81 + React 19
-- **Expo Router v6** (routing file-based)
-- **TypeScript** strict
-- **TanStack Query** v5 (a venir phase 2)
-- **react-hook-form** + **Zod** (a venir phase 2)
-- **expo-secure-store** pour les tokens (a venir phase 2)
+| Couche | Technologies |
+|--------|-------------|
+| **Runtime** | Expo SDK 54, React Native 0.81, React 19 |
+| **Routing** | Expo Router v6 (file-based) |
+| **Langage** | TypeScript strict |
+| **Data fetching** | TanStack Query v5 |
+| **Forms** | react-hook-form + Zod (`@hookform/resolvers`) |
+| **Auth / stockage** | `expo-secure-store` (tokens), AuthContext + axios interceptor |
+| **Images** | `expo-image` (cache memoire + disque) |
+| **Picker** | `expo-image-picker` (creation de livre) |
+| **Icones** | `@expo/vector-icons` (Ionicons) |
+| **Build** | EAS Build (`dev`, `preview`, `production`) |
+
+## Structure
+
+```
+mobile/
+├── app/                            # Routes (Expo Router file-based)
+│   ├── _layout.tsx                 # Root : QueryClient + AuthProvider + SafeArea
+│   ├── index.tsx                   # Splash + redirection auth/app
+│   ├── (auth)/                     # Pile non-authentifiee
+│   │   ├── login.tsx
+│   │   ├── register.tsx
+│   │   ├── otp.tsx                 # Verification OTP
+│   │   ├── forgot-password.tsx
+│   │   └── reset-password.tsx
+│   └── (app)/                      # Pile authentifiee (guard)
+│       ├── _layout.tsx             # Redirige vers /login si pas de user
+│       ├── (tabs)/                 # Tab bar
+│       │   ├── index.tsx           # Liste livres
+│       │   ├── my-books.tsx        # Mes livres (proprietaire)
+│       │   ├── notifications.tsx   # Notifications + badge non-lues
+│       │   └── profile.tsx
+│       ├── books/
+│       │   ├── new.tsx             # Creation livre (image picker)
+│       │   ├── [id]/index.tsx      # Detail + bouton "demander"
+│       │   └── [id]/requests.tsx   # Demandes recues (proprietaire)
+│       ├── requests/
+│       │   ├── me.tsx              # Mes demandes
+│       │   └── [id].tsx            # Detail + annulation
+│       ├── supplies/
+│       │   ├── index.tsx           # Liste fournitures (filtre par type)
+│       │   └── [id].tsx            # Detail + contact fournisseur
+│       └── profile/
+│           ├── edit.tsx            # Edition profil
+│           └── password.tsx        # Changement mot de passe
+├── src/
+│   ├── api/                        # Client axios + endpoints typees
+│   ├── auth/                       # AuthContext + token storage (SecureStore)
+│   ├── components/
+│   │   ├── ui/                     # Button, TextField, Screen, ErrorBanner, StatusBadge
+│   │   └── books/                  # BookCard
+│   ├── hooks/                      # useBooks, useRequests, useSupplies, useNotifications, useUser
+│   ├── theme/                      # colors, typography, spacing, radius
+│   ├── types/                      # Book, User, Request, Supply, Notification
+│   └── utils/                      # apiErrorMessage, formatPhone, validation Zod
+├── assets/
+├── app.json                        # Config Expo (slug, icon, splash, perms)
+├── eas.json                        # Profils EAS Build (dev / preview / prod)
+└── eslint.config.js                # eslint-config-expo
+```
+
+Path alias : `@/*` → `./src/*` (ex : `import { colors } from '@/theme'`).
 
 ## Installation
 
@@ -36,29 +94,10 @@ npm run android
 npm run ios
 ```
 
-Pour tester sur device physique : installer **Expo Go** depuis le store et
-scanner le QR. Si le backend tourne en local, `EXPO_PUBLIC_API_URL` doit
-pointer sur l'**IP LAN** du PC (pas `localhost`, qui resoudrait sur le device).
-
-## Structure
-
-```
-mobile/
-├── app/                  # Routes (Expo Router file-based)
-│   ├── _layout.tsx       # Root : SafeArea + StatusBar
-│   └── index.tsx         # Splash temporaire
-├── src/
-│   ├── api/              # Client API + endpoints
-│   ├── auth/             # AuthContext + token storage
-│   ├── components/       # Composants reutilisables
-│   ├── hooks/            # Hooks TanStack Query
-│   ├── theme/            # colors, typography, spacing
-│   ├── types/            # Types des entites (Book, User, Request…)
-│   └── utils/            # Helpers (formatPhone, validation…)
-└── assets/
-```
-
-Path alias : `@/*` → `./src/*` (ex: `import { colors } from '@/theme'`).
+Pour tester sur un device physique : installer **Expo Go** depuis le store
+et scanner le QR. Si le backend tourne en local, `EXPO_PUBLIC_API_URL`
+doit pointer sur l'**IP LAN** du PC (pas `localhost`, qui resoudrait sur
+le device).
 
 ## Variables d'environnement
 
@@ -68,10 +107,39 @@ Path alias : `@/*` → `./src/*` (ex: `import { colors } from '@/theme'`).
 | `EXPO_PUBLIC_DEMO_MODE` | Si `true`, hint "Code OTP : 1234" sur l'ecran OTP |
 | `EXPO_PUBLIC_SENTRY_DSN` | *(optionnel)* DSN Sentry |
 
-Toutes les vars `EXPO_PUBLIC_*` sont incluses dans le bundle, donc **pas de
-secrets** dedans.
+Toutes les vars `EXPO_PUBLIC_*` sont incluses dans le bundle, donc
+**pas de secrets** dedans.
 
-## Plan de livraison
+## Build natif (EAS)
 
-10 phases, cf. [CAHIER_CONCEPTION_FRONTEND.md §8](../CAHIER_CONCEPTION_FRONTEND.md#8-plan-de-livraison).
-Phase actuelle : **1 — Setup (en cours)**.
+[eas.json](eas.json) definit trois profils :
+
+| Profil | Usage | Distribution | Notes |
+|--------|-------|--------------|-------|
+| `development` | Dev client (debug, hot reload) | internal | requiert `developmentClient` |
+| `preview` | APK partageable pour test | internal | Android : APK signe |
+| `production` | Build store-ready | store | `autoIncrement` du build number |
+
+```bash
+# Une fois : se connecter et lier le projet
+npx eas-cli login
+npx eas-cli init
+
+# Build
+npx eas-cli build --profile preview --platform android
+```
+
+## Qualite de code
+
+```bash
+npm run lint          # eslint-config-expo
+```
+
+Les hooks Husky / commitlint / lint-staged sont configures a la racine
+du monorepo (cf. [README racine](../README.md)).
+
+## Etat des phases
+
+10 phases prevues dans [CAHIER_CONCEPTION_FRONTEND.md §8](../CAHIER_CONCEPTION_FRONTEND.md#8-plan-de-livraison).
+**Phases 1 a 9 livrees**. Phase 10 (polish, perfs, accessibilite) en
+cours — voir [CHANGELOG](../CHANGELOG.md).

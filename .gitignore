@@ -16,3 +16,6 @@ dist/
 
 # Claude Code
 .claude/
+
+# Cahier des charges (document source non versionne)
+📘 Cahier des charges books.pdf

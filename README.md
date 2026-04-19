@@ -2,31 +2,36 @@
 
 [![CI](https://github.com/bslik001/bookswap/actions/workflows/ci.yml/badge.svg)](https://github.com/bslik001/bookswap/actions/workflows/ci.yml)
 [![Node](https://img.shields.io/badge/node-%3E=20.12-brightgreen)](.nvmrc)
-[![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
-Application mobile d'echange de livres scolaires. Les eleves et parents publient les manuels qu'ils souhaitent echanger, un administrateur facilite la mise en relation, et les fournisseurs proposent des fournitures scolaires.
+Application mobile d'echange de livres scolaires. Les eleves et parents
+publient les manuels qu'ils souhaitent echanger, un administrateur facilite
+la mise en relation, et les fournisseurs proposent des fournitures scolaires.
 
 ## Documentation
 
 | Document | Description |
 |----------|-------------|
-| [Cahier des charges](📘%20Cahier%20des%20charges%20books.pdf) | Specifications fonctionnelles initiales |
-| [Cahier d'analyse](CAHIER_ANALYSE.md) | Analyse detaillee : cas d'utilisation, modele de donnees, regles de gestion |
+| [Cahier d'analyse](CAHIER_ANALYSE.md) | Cas d'utilisation, modele de donnees, regles de gestion |
 | [Cahier de conception](CAHIER_CONCEPTION.md) | Architecture technique, schema Prisma, contrats API, specs UI |
-| [Cahier de conception frontend](CAHIER_CONCEPTION_FRONTEND.md) | Architecture mobile React Native/Expo, structure, ecrans, strategies transverses |
+| [Cahier de conception frontend](CAHIER_CONCEPTION_FRONTEND.md) | Architecture mobile React Native/Expo, ecrans, strategies transverses |
 | [Maquettes](maquettes.html) | 12 ecrans interactifs (ouvrir dans un navigateur en mode mobile) |
-| [CHANGELOG](CHANGELOG.md) | Historique des versions et changements |
-| **API interactive** | Swagger UI disponible sur `/api/docs` une fois le serveur lance |
+| [CHANGELOG](CHANGELOG.md) | Historique des versions |
+| [README API](server/README.md) | Backend Express + Prisma + PostgreSQL |
+| [README mobile](mobile/README.md) | App React Native + Expo |
+| **API interactive** | Swagger UI sur `/api/docs` une fois le serveur lance |
+
+> Le cahier des charges initial (PDF) est conserve hors versionnement
+> (cf. [.gitignore](.gitignore)).
 
 ## Architecture
 
 ```mermaid
 flowchart LR
-    Client["Client mobile<br/>(React Native)"]
+    Mobile["Mobile<br/>(React Native + Expo)"]
 
-    subgraph API["Express API (Node 18)"]
+    subgraph API["Express API (Node 20)"]
         direction TB
-        MW["Middleware chain<br/>helmet · compression · cors<br/>pino-http (x-request-id)<br/>rate-limiter · Zod validate"]
+        MW["Middleware<br/>helmet · compression · cors<br/>pino-http (x-request-id)<br/>rate-limiter · Zod validate"]
         Routes["Routes<br/>/auth · /users · /books<br/>/requests · /supplies<br/>/notifications · /admin<br/>/health · /docs"]
         Errors["errorHandler<br/>(AppError · Zod · Prisma)"]
         MW --> Routes --> Errors
@@ -44,446 +49,56 @@ flowchart LR
         AT["Africa's Talking<br/>(SMS OTP)"]
     end
 
-    Client -- HTTPS/JSON --> MW
+    Mobile -- HTTPS/JSON --> MW
     Routes --> Prisma
     Routes --> Cloud
     Routes --> FCM
     Routes --> AT
 ```
 
-Le diagramme represente le flux d'une requete : le client mobile attaque l'API Express, qui passe par une chaine de middlewares (securite, observabilite, validation) avant d'atteindre les routes metier. Les controllers delegue a Prisma pour la base et aux SDK externes pour les images, les push et les SMS.
+Le client mobile attaque l'API Express, qui passe par une chaine de
+middlewares (securite, observabilite, validation) avant d'atteindre les
+routes metier. Les controllers deleguent a Prisma pour la base et aux SDK
+externes pour les images, push et SMS.
 
-## Stack technique
-
-| Couche | Technologies |
-|--------|-------------|
-| **Backend** | Node.js, Express, TypeScript |
-| **ORM / BDD** | Prisma, PostgreSQL |
-| **Auth** | JWT (access 15min + refresh 7j en base), bcrypt, OTP SMS |
-| **Validation** | Zod, validation UUID sur tous les params `:id` |
-| **Upload images** | Multer + Cloudinary |
-| **Notifications push** | Firebase Cloud Messaging |
-| **SMS** | Africa's Talking |
-| **Logging** | Pino (JSON en prod, pretty en dev) |
-| **Documentation API** | Swagger / OpenAPI 3.0 (swagger-jsdoc + swagger-ui-express) |
-| **Qualite de code** | ESLint + Prettier |
-| **CI/CD** | GitHub Actions (lint, build, prisma validate) |
-| **Containerisation** | Docker (multi-stage build) |
-| **Frontend** *(a venir)* | React Native + Expo |
-
-## Structure du projet
+## Structure du monorepo
 
 ```
 bookswap/
-├── .github/workflows/
-│   └── ci.yml                       # Lint → Build → Prisma validate
-├── CAHIER_ANALYSE.md
-├── CAHIER_CONCEPTION.md
-├── maquettes.html
-└── server/
-    ├── .eslintrc.json               # ESLint v8 + @typescript-eslint + Prettier
-    ├── .prettierrc                   # Semi, singleQuote, trailingComma: all
-    ├── Dockerfile                   # Multi-stage : build → production
-    ├── .dockerignore
-    ├── prisma/
-    │   ├── schema.prisma            # 8 modeles, 6 enums
-    │   └── migrations/
-    │       ├── 20260415_init/
-    │       ├── 20260415_add_search_vector/       # tsvector + index GIN
-    │       ├── 20260416_add_userid_to_otp/       # Lien OTP → User
-    │       ├── 20260416_add_composite_index/     # Index (status, grade, condition)
-    │       └── 20260416_add_refresh_tokens/      # Table refresh_tokens
-    └── src/
-        ├── index.ts                 # Point d'entree
-        ├── app.ts                   # Express : CORS, rate limiter, Swagger UI, routes
-        ├── config/
-        │   ├── env.ts               # Validation Zod des variables d'environnement
-        │   ├── logger.ts            # Pino : JSON en prod, pino-pretty en dev
-        │   ├── swagger.ts           # OpenAPI 3.0 spec (28 endpoints documentes)
-        │   ├── cloudinary.ts        # SDK Cloudinary
-        │   ├── africastalking.ts    # SMS (log en dev, envoi reel en prod)
-        │   └── firebase.ts          # Push FCM (log en dev, envoi reel en prod)
-        ├── lib/
-        │   └── prisma.ts            # Singleton PrismaClient
-        ├── middleware/
-        │   ├── errorHandler.ts      # AppError, Zod, Prisma → format JSON standard
-        │   ├── auth.ts              # authenticate (JWT) + authorize (roles)
-        │   ├── validate.ts          # Factory Zod pour body/query/params
-        │   ├── validateId.ts        # Validation UUID sur tous les params :id
-        │   ├── rateLimiter.ts       # Global (100/min) + factory custom
-        │   └── upload.ts            # Multer memory, 5 Mo, JPEG/PNG
-        ├── utils/
-        │   ├── jwt.ts               # Access token (15min), refresh token (7j), hashToken
-        │   ├── password.ts          # bcrypt 12 rounds
-        │   ├── otp.ts               # Code 4 chiffres, expiration, masquage
-        │   ├── pagination.ts        # paginate(), buildMeta()
-        │   ├── cloudinary.ts        # uploadImage(), deleteImage()
-        │   └── asyncHandler.ts      # Wrapper try/catch pour controllers
-        ├── types/
-        │   ├── express.d.ts         # Extend Request avec user
-        │   └── africastalking.d.ts  # Types Africa's Talking SDK
-        ├── docs/                    # Swagger/OpenAPI annotations
-        │   ├── auth.ts
-        │   ├── users.ts
-        │   ├── books.ts
-        │   ├── requests.ts
-        │   ├── supplies.ts
-        │   ├── notifications.ts
-        │   └── admin.ts
-        └── modules/
-            ├── auth/                # Inscription, OTP, login, refresh, logout, passwords
-            ├── user/                # Profil, suppression compte, admin (list, block, stats)
-            ├── book/                # CRUD, full-text search, upload
-            ├── request/             # Demandes, transitions de statut
-            ├── supply/              # Fournitures, contact fournisseur
-            └── notification/        # In-app + push FCM
+├── .github/workflows/ci.yml        # Pipeline CI
+├── .husky/                         # Hooks Git (pre-commit, commit-msg)
+├── docker-compose.yml              # Postgres + API (dev)
+├── render.yaml                     # Blueprint deploiement Render
+├── server/                         # API Express + Prisma — cf. server/README.md
+└── mobile/                         # App React Native + Expo — cf. mobile/README.md
 ```
 
-## Base de donnees
-
-**8 modeles :** User, Book, Request, Supply, ContactRequest, Notification, OtpVerification, RefreshToken
-
-**Fonctionnalites notables :**
-- Recherche full-text en francais (`tsvector` + index GIN sur titre et auteur des livres)
-- Index composite `(status, grade, condition)` sur les livres pour les filtres frequents
-- Contrainte d'unicite `@@unique([bookId, requesterId])` sur les demandes (RG-04)
-- Refresh tokens stockes en base (hash SHA-256) avec rotation et detection de replay
-- `tokenVersion` sur User pour revoquer tous les tokens d'un utilisateur
-- `isActive` / `isPhoneVerified` pour le flux d'inscription avec OTP
-- OTP lie au User (`userId` sur OtpVerification) pour tracabilite
-
-## API — 34 endpoints
-
-> Documentation interactive Swagger UI disponible sur `/api/docs`
-> Spec JSON telechargeable sur `/api/docs.json`
-
-### Authentification
-
-| Methode | Endpoint | Description | Rate limit |
-|---------|----------|-------------|------------|
-| POST | `/api/auth/register` | Inscription + envoi OTP SMS | 3 / 10min |
-| POST | `/api/auth/verify-otp` | Verification du code OTP, active le compte | 5 / 15min |
-| POST | `/api/auth/resend-otp` | Renvoyer le code (cooldown 60s, max 3/h) | 2 / min |
-| POST | `/api/auth/login` | Connexion, retourne les tokens JWT | 5 / min |
-| POST | `/api/auth/refresh-token` | Renouveler les tokens (rotation automatique) | - |
-| POST | `/api/auth/logout` | Revoquer le refresh token (ou tous) | Auth |
-| PUT | `/api/auth/change-password` | Changer de mot de passe (invalide les tokens) | Auth |
-| POST | `/api/auth/forgot-password` | Envoi OTP de reinitialisation (reponse opaque) | - |
-| POST | `/api/auth/reset-password` | Reinitialiser le mot de passe via OTP | - |
-
-### Utilisateurs
-
-| Methode | Endpoint | Description | Auth |
-|---------|----------|-------------|------|
-| GET | `/api/users/me` | Mon profil complet | User |
-| PUT | `/api/users/me` | Modifier mon profil / FCM token | User |
-| DELETE | `/api/users/me` | Supprimer mon compte (verification mot de passe) | User |
-| GET | `/api/users/:id` | Profil public (nom tronque : "Diallo" → "D.") | User |
-
-### Livres
-
-| Methode | Endpoint | Description | Auth |
-|---------|----------|-------------|------|
-| GET | `/api/books` | Liste avec filtres (grade, condition, status, search), pagination | User |
-| GET | `/api/books/me` | Mes livres (max 100) | User |
-| GET | `/api/books/:id` | Detail + `hasRequested` + owner tronque | User |
-| POST | `/api/books` | Creer (multipart/form-data + image) | User |
-| PUT | `/api/books/:id` | Modifier (proprietaire uniquement) | User |
-| DELETE | `/api/books/:id` | Supprimer (proprietaire ou admin) | User |
-| GET | `/api/books/:id/requests` | Demandes recues sur mon livre (proprietaire) | User |
-
-### Demandes
-
-| Methode | Endpoint | Description | Auth |
-|---------|----------|-------------|------|
-| POST | `/api/requests` | Demander un livre (regles RG-04, RG-05) | User |
-| GET | `/api/requests/me` | Mes demandes avec infos livre | User |
-| GET | `/api/requests/:id` | Detail (demandeur ou proprietaire) | User |
-| DELETE | `/api/requests/:id` | Annuler ma demande (tant que PENDING) | User |
-
-### Fournitures
-
-| Methode | Endpoint | Description | Auth |
-|---------|----------|-------------|------|
-| GET | `/api/supplies` | Liste avec filtre type, pagination | User |
-| GET | `/api/supplies/:id` | Detail fourniture | User |
-| POST | `/api/supplies` | Ajouter une fourniture | Supplier/Admin |
-| POST | `/api/supplies/:id/contact` | Contacter le fournisseur | User |
-
-### Notifications
-
-| Methode | Endpoint | Description | Auth |
-|---------|----------|-------------|------|
-| GET | `/api/notifications` | Liste paginee (DESC) | User |
-| GET | `/api/notifications/unread-count` | Nombre de non-lues | User |
-| PUT | `/api/notifications/:id/read` | Marquer comme lue | User |
-| PUT | `/api/notifications/read-all` | Tout marquer comme lu | User |
-
-### Administration
-
-| Methode | Endpoint | Description | Auth |
-|---------|----------|-------------|------|
-| GET | `/api/admin/users/stats` | Statistiques globales (users, books, requests, supplies) | Admin |
-| GET | `/api/admin/users` | Liste utilisateurs (filtre role, search) | Admin |
-| PUT | `/api/admin/users/:id/block` | Bloquer/debloquer (invalide les tokens) | Admin |
-| GET | `/api/admin/requests` | Toutes les demandes (coordonnees completes) | Admin |
-| PUT | `/api/admin/requests/:id` | Changer le statut (transitions controlees) | Admin |
-
-### Health checks
-
-| Methode | Endpoint | Description | Auth |
-|---------|----------|-------------|------|
-| GET | `/api/health` | Statut de l'API | - |
-| GET | `/api/health/ready` | Readiness (teste la connexion PostgreSQL) | - |
-
-### Transitions de statut des demandes
-
-```
-PENDING → IN_PROGRESS → ACCEPTED → COMPLETED
-                   ↘       ↘
-                  REFUSED   REFUSED
-```
-
-**Effets de bord automatiques :**
-- `ACCEPTED` → livre passe a `RESERVED`
-- `COMPLETED` → livre passe a `EXCHANGED`
-- Chaque changement → notification au demandeur
-
-## Format de reponse
-
-**Succes :**
-```json
-{
-  "success": true,
-  "data": { ... },
-  "meta": { "page": 1, "limit": 20, "total": 45, "totalPages": 3 }
-}
-```
-
-**Erreur :**
-```json
-{
-  "success": false,
-  "error": {
-    "code": "VALIDATION_ERROR",
-    "message": "Donnees invalides",
-    "details": [{ "field": "email", "message": "Format d'email invalide" }]
-  }
-}
-```
-
-## Installation
-
-### Prerequis
-
-- Node.js >= 20.12 (requis par Vitest 4 / rolldown)
-- PostgreSQL >= 14
-
-### Configuration
+## Quick start
 
 ```bash
-cd server
-cp .env.example .env
-# Remplir les variables dans .env
+# Installer les hooks Git du monorepo
 npm install
-```
 
-### Variables d'environnement
-
-| Variable | Description |
-|----------|-------------|
-| `DATABASE_URL` | URL PostgreSQL |
-| `JWT_ACCESS_SECRET` | Secret JWT access token (min 32 car.) |
-| `JWT_REFRESH_SECRET` | Secret JWT refresh token (min 32 car.) |
-| `CLOUDINARY_CLOUD_NAME` | Cloudinary cloud name |
-| `CLOUDINARY_API_KEY` | Cloudinary API key |
-| `CLOUDINARY_API_SECRET` | Cloudinary API secret |
-| `FIREBASE_PROJECT_ID` | Firebase project ID |
-| `FIREBASE_PRIVATE_KEY` | Firebase service account private key (PEM) |
-| `FIREBASE_CLIENT_EMAIL` | Firebase service account email |
-| `AT_API_KEY` | Africa's Talking API key |
-| `AT_USERNAME` | Africa's Talking username |
-| `AT_SENDER_ID` | SMS Sender ID (doit etre approuve par l'operateur) |
-| `PORT` | Port du serveur (defaut: 3000) |
-| `NODE_ENV` | `development` / `production` / `test` |
-| `CORS_ORIGIN` | Origine autorisee pour CORS |
-| `SENTRY_DSN` | *(optionnel)* DSN Sentry — active le reporting d'erreurs si defini |
-| `SENTRY_TRACES_SAMPLE_RATE` | *(optionnel)* taux d'echantillonnage des traces (0 a 1, defaut 0) |
-
-### Base de donnees
-
-```bash
-# Creer la base
-createdb bookswap
-
-# Appliquer les migrations
-npx prisma migrate dev
-
-# Remplir la base avec des donnees de demo
-npm run prisma:seed
-
-# Visualiser les donnees
-npx prisma studio
-```
-
-**Donnees de seed :** 1 admin, 2 fournisseurs, 5 utilisateurs, 10 livres, 3 demandes, 4 fournitures.
-Mot de passe par defaut : `Password123!` — comptes : `admin@bookswap.sn`, `user1@bookswap.sn`...`user5@bookswap.sn`.
-
-### Lancement
-
-**Option 1 — Tout en Docker (Postgres + API avec hot reload)**
-
-```bash
-# Pre-requis (une fois) : installer node_modules sur l'hote
+# Backend (Postgres + API en Docker, hot reload)
 cd server && npm ci && cd ..
-
-# Lancer la stack complete
 docker compose up -d
 
-# Logs API
-docker compose logs -f api
-
-# Arret
-docker compose down
-```
-
-Le service `api` utilise [Dockerfile.dev](server/Dockerfile.dev) : il monte
-le source et les `node_modules` de l'hote en bind-mount, ce qui evite tout
-`npm ci` dans le conteneur (rapide, robuste sur reseau lent) et garde le
-hot reload via `ts-node-dev`.
-
-**Option 2 — Postgres en Docker, API en local**
-
-```bash
-docker compose up -d postgres
-cd server && npm run dev
-```
-
-**Production : build standalone**
-
-Le [Dockerfile](server/Dockerfile) (sans `.dev`) construit une image autonome
-pour un deploiement (Render, Fly.io, Railway, etc.) : il execute `npm ci`
-puis `prisma migrate deploy` au demarrage. Il assume un reseau stable.
-
-```bash
-cd server
-docker build -t bookswap-api .
-docker run -p 3000:3000 --env-file .env bookswap-api
-```
-
-```bash
-# Build local sans Docker
-npm run build
+# App mobile
+cd mobile
+npm install
+cp .env.example .env
 npm start
 ```
 
-### Qualite de code
+Details d'install, env et tests par sous-projet :
+- **API** → [server/README.md](server/README.md)
+- **Mobile** → [mobile/README.md](mobile/README.md)
 
-```bash
-# Linter
-npm run lint
-npm run lint:fix
+## Conventions
 
-# Formattage
-npm run format
-
-# Typecheck seul
-npm run typecheck
-
-# Tests (Vitest)
-npm test
-npm run test:watch
-
-# Tout en une commande : lint + typecheck + tests
-npm run check
-```
-
-**Hooks Git automatiques** (via Husky) :
-- `pre-commit` → lint-staged (ESLint --fix + Prettier sur les fichiers stages)
-- `commit-msg` → commitlint (Conventional Commits obligatoire)
-
-Installation des hooks apres un clone :
-
-```bash
-# Depuis la racine
-npm install
-```
-
-### Verification
-
-```bash
-# Health check basique
-curl http://localhost:3000/api/health
-# → {"success":true,"data":{"status":"ok"}}
-
-# Readiness (teste PostgreSQL)
-curl http://localhost:3000/api/health/ready
-# → {"success":true,"data":{"status":"ready","database":"connected"}}
-
-# Documentation API interactive
-open http://localhost:3000/api/docs
-```
-
-## Mode developpement
-
-En `NODE_ENV=development` :
-- Les **SMS OTP** sont logues via pino au lieu d'etre envoyes
-- Les **notifications push** sont loguees via pino au lieu de passer par FCM
-- Les **erreurs 500** incluent la stack trace dans la reponse
-- Les **logs** sont affiches en format lisible (pino-pretty) au lieu de JSON
-
-## Securite
-
-- Mots de passe hashes avec bcrypt (12 rounds)
-- JWT access token expire en 15 minutes
-- Refresh tokens stockes en base (hash SHA-256), rotation automatique a chaque utilisation
-- Detection de replay : reutilisation d'un ancien refresh token → revocation de tous les tokens de l'utilisateur
-- `tokenVersion` sur User pour revoquer globalement les tokens (blocage, changement de mot de passe)
-- Validation UUID sur tous les parametres `:id` des routes (middleware `validateId`)
-- Rate limiting global (100 req/min) + par endpoint (register, login, OTP)
-- Validation Zod sur toutes les entrees (body, query, params)
-- Upload : JPEG/PNG uniquement, 5 Mo max, stockage memoire (pas de fichier temporaire)
-- Profils publics : nom de famille tronque ("D."), pas de telephone ni adresse
-- Routes admin protegees par middleware `authorize('ADMIN')`
-- Forgot password : reponse opaque (ne revele pas si le numero existe)
-
-## CI/CD
-
-Le pipeline GitHub Actions s'execute sur chaque push et PR vers `main` :
-
-1. **npm ci** — installation des dependances
-2. **prisma generate** — generation du client Prisma
-3. **npm run lint** — ESLint (zero warnings autorise)
-4. **npx tsc --noEmit** — verification TypeScript
-5. **npx prisma validate** — validation du schema Prisma
-
-## Deploiement
-
-Le projet est pret a etre deploye sur [Render](https://render.com) via le
-blueprint [render.yaml](render.yaml) a la racine.
-
-### Premiere fois
-
-1. Creer un compte Render et connecter le repo GitHub
-2. **New** > **Blueprint** > selectionner ce repo
-3. Render detecte [render.yaml](render.yaml) et propose :
-   - une base **PostgreSQL 16** (plan free)
-   - un **web service Docker** (plan free, region Frankfurt, healthcheck sur `/api/health`)
-4. Remplir dans le dashboard les secrets marques `sync: false` :
-   - `CORS_ORIGIN` — URL du frontend (ex: `https://bookswap.expo.app`)
-   - Cloudinary : `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`
-   - Firebase : `FIREBASE_PROJECT_ID`, `FIREBASE_PRIVATE_KEY`, `FIREBASE_CLIENT_EMAIL`
-   - Africa's Talking : `AT_API_KEY`, `AT_USERNAME`, `AT_SENDER_ID`
-   - *(optionnel)* `SENTRY_DSN` pour le reporting d'erreurs
-5. `DATABASE_URL`, `JWT_ACCESS_SECRET` et `JWT_REFRESH_SECRET` sont injectes
-   automatiquement (connexion Postgres interne + secrets generes par Render)
-6. Le service se deploie : `prisma migrate deploy` puis `node dist/index.js`
-
-### Deploiements suivants
-
-Chaque push sur `main` redeploie automatiquement (CI GitHub Actions valide
-avant, Render build l'image Docker et redemarre le service).
-
-> Le plan free a un **cold start d'environ 30s** apres 15 min d'inactivite.
-> Pour un usage demo/jury c'est acceptable ; pour de la production passer
-> au plan starter ($7/mois).
+- **Commits** — [Conventional Commits](https://www.conventionalcommits.org/)
+  obligatoires (verifies par commitlint via le hook `commit-msg`).
+- **Lint / format** — `pre-commit` execute automatiquement
+  ESLint + Prettier sur les fichiers stages (lint-staged).
+- **Branches** — `main` deployee en continu sur Render. Les PR
+  declenchent la CI (lint + typecheck + tests + prisma validate).

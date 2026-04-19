@@ -9,6 +9,36 @@ et le projet suit une versioning [SemVer](https://semver.org/lang/fr/).
 
 ### Ajouts
 
+#### Application mobile (React Native + Expo SDK 54)
+
+- **Phase 1 — Scaffolding Expo** : structure projet, theme (`colors`,
+  `typography`, `spacing`), composants UI de base (`Button`, `TextField`,
+  `Screen`, `ErrorBanner`, `StatusBadge`), `BookCard`.
+- **Phase 2 — Client API et auth** : axios + intercepteur de refresh
+  token, `AuthContext` + `expo-secure-store`, route guards `(app)` /
+  `(auth)`, `apiErrorMessage` pour formater les erreurs serveur.
+- **Phase 3 — Ecrans d'authentification** : login, register, OTP,
+  forgot-password, reset-password, formulaires `react-hook-form` + Zod,
+  hint demo "Code OTP : 1234" en mode `EXPO_PUBLIC_DEMO_MODE`.
+- **Phase 4 — Liste des livres** : tabs (tous / mes livres), recherche
+  full-text, filtres (grade, condition, status), pagination infinie via
+  TanStack Query.
+- **Phase 5 — Demandes** : creation depuis le detail livre, liste de mes
+  demandes, detail avec annulation (PENDING uniquement).
+- **Phase 6 — Mes livres** : liste proprietaire avec image picker, formulaire
+  de creation (`expo-image-picker` + multipart/form-data).
+- **Phase 7 — Fournitures** : liste filtree par type, contact fournisseur
+  via formulaire avec message libre.
+- **Phase 8 — Notifications** : liste paginee avec badge non-lues sur
+  l'icone tab, marquage individuel et global.
+- **Phase 9 — Profil** : edition (firstName, lastName, address,
+  gradeInterests), changement de mot de passe, suppression de compte
+  avec verification du mot de passe.
+- **Profils EAS Build** ([mobile/eas.json](mobile/eas.json)) : `development`
+  (dev client), `preview` (APK partageable), `production` (auto-increment).
+
+#### API
+
 - **Stack Docker Compose complete (Postgres + API)** avec hot reload. Le
   service `api` utilise un nouveau [Dockerfile.dev](server/Dockerfile.dev)
   minimal (juste `openssl` pour Prisma) et bind-mounte le source et les
@@ -17,14 +47,48 @@ et le projet suit une versioning [SemVer](https://semver.org/lang/fr/).
 - **Blueprint Render ([render.yaml](render.yaml))** pour deploiement en un
   clic : Postgres managee + web service Docker + healthcheck, avec
   generation automatique des secrets JWT et injection auto de `DATABASE_URL`.
-  Section "Deploiement" ajoutee au README avec la procedure complete.
+
+#### Documentation
+
+- **Cahier de conception frontend**
+  ([CAHIER_CONCEPTION_FRONTEND.md](CAHIER_CONCEPTION_FRONTEND.md)) :
+  architecture mobile, ecrans, plan de livraison en 10 phases, strategies
+  transverses (auth, cache, formulaires).
+- **Reorganisation des README** : un README dedie par sous-projet
+  ([server/README.md](server/README.md), [mobile/README.md](mobile/README.md)),
+  README racine recentre sur la vue d'ensemble et l'index des documents.
 
 ### Modifie
 
+- **Performance images mobiles** : passage de `react-native` `Image` a
+  `expo-image` (cache memoire + disque, transitions, `contentFit`) sur
+  toutes les vues qui chargent des images distantes (livres, fournitures,
+  vignettes de demandes).
 - **Dockerfile (production)** : nettoyage et ajout de `openssl` +
   `ca-certificates` dans l'image runtime pour que la detection de version
   OpenSSL des engines Prisma fonctionne sur `bookworm-slim`. Sans le binaire
   `openssl`, Prisma tombait silencieusement sur le mauvais binaire d'engine.
+- **Seed Prisma** : remplacement de `ts-node-dev` par `tsx` pour rendre le
+  script executable en production (image Docker).
+- **Cahier des charges (PDF)** retire du depot : conserve uniquement en
+  local, ajoute au [.gitignore](.gitignore).
+
+### Corrections
+
+- **Tests Vitest** : Vite preloadait `.env` avant les `setupFiles`, ce qui
+  laissait `DATABASE_URL` pointer sur la base de production Render —
+  les tests s'y connectaient et timeout-aient. `dotenv.config` force
+  desormais `override: true` et un garde-fou refuse de tourner si l'URL
+  n'est pas une base locale dont le nom contient `test`.
+- **Tests Vitest (CI)** : ajout de `npm test` au pipeline GitHub Actions
+  (lint + typecheck + prisma validate + tests).
+- **Swagger** : resolution du chemin `docs/` depuis `__dirname` pour que la
+  doc charge en production (le bundle `dist/` n'a pas le meme cwd).
+- **Render** : pin de la region de la base de donnees a Frankfurt (la base
+  et le service doivent etre dans la meme region pour la latence).
+- **Docker** : install de `openssl` aussi dans le builder + `chown
+  node_modules` pour eviter les permissions root sur le bind-mount dev.
+- **CI** : bump Node de 18 a 22 (Vitest 4 / rolldown exige >= 20.12).
 
 ## [0.1.0] — 2026-04-17
 
