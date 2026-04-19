@@ -1,5 +1,5 @@
-import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
-import { booksApi, type ListBooksParams } from '@/api/books';
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { booksApi, type CreateBookInput, type ListBooksParams } from '@/api/books';
 
 const PAGE_SIZE = 20;
 
@@ -26,5 +26,28 @@ export function useMyBooks() {
   return useQuery({
     queryKey: ['books', 'mine'],
     queryFn: () => booksApi.getMine(),
+  });
+}
+
+export function useCreateBook() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: CreateBookInput) => booksApi.create(input),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['books', 'mine'] });
+      qc.invalidateQueries({ queryKey: ['books', 'list'] });
+    },
+  });
+}
+
+export function useDeleteBook() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => booksApi.remove(id),
+    onSuccess: (_, id) => {
+      qc.invalidateQueries({ queryKey: ['books', 'mine'] });
+      qc.invalidateQueries({ queryKey: ['books', 'list'] });
+      qc.removeQueries({ queryKey: ['books', 'detail', id] });
+    },
   });
 }

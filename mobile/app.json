@@ -39,7 +39,13 @@
           }
         }
       ],
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "BookSwap a besoin d'acceder a vos photos pour ajouter une image au livre."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

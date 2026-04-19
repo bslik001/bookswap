@@ -34,8 +34,18 @@ export const resetPasswordSchema = z.object({
   newPassword: passwordRules,
 });
 
+export const createBookSchema = z.object({
+  title: z.string().min(2, 'Minimum 2 caracteres').max(255),
+  author: z.string().max(255).optional().or(z.literal('')),
+  grade: z.string().min(1, 'Niveau requis').max(100),
+  className: z.string().max(100).optional().or(z.literal('')),
+  condition: z.enum(['NEW', 'USED'], { message: 'Etat requis' }),
+  description: z.string().max(2000).optional().or(z.literal('')),
+});
+
 export type LoginValues = z.infer<typeof loginSchema>;
 export type RegisterValues = z.infer<typeof registerSchema>;
 export type VerifyOtpValues = z.infer<typeof verifyOtpSchema>;
 export type ForgotPasswordValues = z.infer<typeof forgotPasswordSchema>;
 export type ResetPasswordValues = z.infer<typeof resetPasswordSchema>;
+export type CreateBookValues = z.infer<typeof createBookSchema>;

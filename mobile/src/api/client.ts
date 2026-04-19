@@ -48,9 +48,10 @@ type RequestOptions = Omit<RequestInit, 'body'> & {
 async function rawFetch<T>(path: string, options: RequestOptions): Promise<T> {
   const { body, skipAuth, headers, ...rest } = options;
   const access = skipAuth ? null : authStore.getAccessToken();
+  const isFormData = typeof FormData !== 'undefined' && body instanceof FormData;
 
   const finalHeaders: Record<string, string> = {
-    'Content-Type': 'application/json',
+    ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
     ...(headers as Record<string, string> | undefined),
   };
   if (access) finalHeaders.Authorization = `Bearer ${access}`;
@@ -58,7 +59,8 @@ async function rawFetch<T>(path: string, options: RequestOptions): Promise<T> {
   const res = await fetch(`${API_URL}${path}`, {
     ...rest,
     headers: finalHeaders,
-    body: body !== undefined ? JSON.stringify(body) : undefined,
+    body:
+      body === undefined ? undefined : isFormData ? (body as FormData) : JSON.stringify(body),
   });
 
   const json = (await res.json().catch(() => null)) as ApiResponse<T> | null;
