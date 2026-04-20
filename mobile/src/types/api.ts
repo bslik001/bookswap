@@ -1,4 +1,11 @@
-export type ApiSuccess<T> = { success: true; data: T };
+export type PaginationMeta = {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+};
+
+export type ApiSuccess<T> = { success: true; data: T; meta?: PaginationMeta };
 
 export type ApiErrorPayload = {
   success: false;
@@ -10,6 +17,8 @@ export type ApiErrorPayload = {
 };
 
 export type ApiResponse<T> = ApiSuccess<T> | ApiErrorPayload;
+
+export type Paginated<T> = { data: T[]; meta: PaginationMeta };
 
 export class ApiError extends Error {
   constructor(

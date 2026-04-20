@@ -1,5 +1,5 @@
 import { api } from './client';
-import type { SuppliesPage, Supply, SupplyFilters } from '@/types/supply';
+import type { Supply, SupplyFilters } from '@/types/supply';
 
 export type ListSuppliesParams = SupplyFilters & {
   page?: number;
@@ -17,7 +17,7 @@ function buildQuery(params: ListSuppliesParams): string {
 
 export const suppliesApi = {
   list: (params: ListSuppliesParams = {}) =>
-    api.get<SuppliesPage>(`/supplies${buildQuery(params)}`),
+    api.getPaginated<Supply>(`/supplies${buildQuery(params)}`),
   getById: (id: string) => api.get<Supply>(`/supplies/${id}`),
   contact: (id: string, message: string) =>
     api.post<{ id: string; message: string; createdAt: string }>(`/supplies/${id}/contact`, {

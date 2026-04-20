@@ -1,6 +1,6 @@
 import { authStore } from '@/auth/authStore';
 import { tokenStorage } from '@/auth/tokenStorage';
-import { ApiError, type ApiResponse } from '@/types/api';
+import { ApiError, type ApiResponse, type Paginated } from '@/types/api';
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
@@ -45,7 +45,10 @@ type RequestOptions = Omit<RequestInit, 'body'> & {
   skipAuth?: boolean;
 };
 
-async function rawFetch<T>(path: string, options: RequestOptions): Promise<T> {
+async function rawFetch<T>(
+  path: string,
+  options: RequestOptions,
+): Promise<ApiResponse<T> & { success: true }> {
   const { body, skipAuth, headers, ...rest } = options;
   const access = skipAuth ? null : authStore.getAccessToken();
   const isFormData = typeof FormData !== 'undefined' && body instanceof FormData;
@@ -72,10 +75,13 @@ async function rawFetch<T>(path: string, options: RequestOptions): Promise<T> {
     throw new ApiError(code, message, res.status, details);
   }
 
-  return json.data;
+  return json;
 }
 
-export async function apiFetch<T>(path: string, options: RequestOptions = {}): Promise<T> {
+async function apiFetchEnvelope<T>(
+  path: string,
+  options: RequestOptions = {},
+): Promise<ApiResponse<T> & { success: true }> {
   try {
     return await rawFetch<T>(path, options);
   } catch (err) {
@@ -93,9 +99,27 @@ export async function apiFetch<T>(path: string, options: RequestOptions = {}): P
   }
 }
 
+export async function apiFetch<T>(path: string, options: RequestOptions = {}): Promise<T> {
+  const envelope = await apiFetchEnvelope<T>(path, options);
+  return envelope.data;
+}
+
+export async function apiFetchPaginated<T>(
+  path: string,
+  options: RequestOptions = {},
+): Promise<Paginated<T>> {
+  const envelope = await apiFetchEnvelope<T[]>(path, options);
+  if (!envelope.meta) {
+    throw new ApiError('INVALID_RESPONSE', 'Reponse paginee sans meta', 500);
+  }
+  return { data: envelope.data, meta: envelope.meta };
+}
+
 export const api = {
   get: <T>(path: string, options?: RequestOptions) =>
     apiFetch<T>(path, { ...options, method: 'GET' }),
+  getPaginated: <T>(path: string, options?: RequestOptions) =>
+    apiFetchPaginated<T>(path, { ...options, method: 'GET' }),
   post: <T>(path: string, body?: unknown, options?: RequestOptions) =>
     apiFetch<T>(path, { ...options, method: 'POST', body }),
   put: <T>(path: string, body?: unknown, options?: RequestOptions) =>

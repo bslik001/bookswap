@@ -42,7 +42,7 @@ export default function SuppliesListScreen() {
   } = useSupplies(filters);
 
   const supplies = useMemo(
-    () => (data?.pages ?? []).flatMap((page) => page.supplies),
+    () => (data?.pages ?? []).flatMap((page) => page.data),
     [data?.pages],
   );
 

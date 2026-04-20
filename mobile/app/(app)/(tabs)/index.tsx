@@ -46,7 +46,7 @@ export default function BooksListScreen() {
     error,
   } = useBooks(filters);
 
-  const books = useMemo(() => data?.pages.flatMap((p) => p.books) ?? [], [data]);
+  const books = useMemo(() => data?.pages.flatMap((p) => p.data) ?? [], [data]);
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>

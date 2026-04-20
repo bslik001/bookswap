@@ -44,7 +44,7 @@ export default function NotificationsScreen() {
   const markAllRead = useMarkAllNotificationsRead();
 
   const items = useMemo(
-    () => (data?.pages ?? []).flatMap((p) => p.notifications),
+    () => (data?.pages ?? []).flatMap((p) => p.data),
     [data?.pages],
   );
   const hasUnread = items.some((n) => !n.isRead);

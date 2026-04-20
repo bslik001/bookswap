@@ -18,16 +18,6 @@ export type Supply = {
   supplier: Supplier;
 };
 
-export type SuppliesPage = {
-  supplies: Supply[];
-  meta: {
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
-  };
-};
-
 export type SupplyFilters = {
   type?: SupplyType;
 };

@@ -1,5 +1,5 @@
 import { api } from './client';
-import type { Book, BookCondition, BookDetail, BookFilters, Paginated } from '@/types/book';
+import type { Book, BookCondition, BookDetail, BookFilters } from '@/types/book';
 
 export type ListBooksParams = BookFilters & {
   page?: number;
@@ -48,7 +48,7 @@ function buildFormData(input: CreateBookInput): FormData {
 
 export const booksApi = {
   list: (params: ListBooksParams = {}) =>
-    api.get<Paginated<Book>>(`/books${buildQuery(params)}`),
+    api.getPaginated<Book>(`/books${buildQuery(params)}`),
   getById: (id: string) => api.get<BookDetail>(`/books/${id}`),
   getMine: () => api.get<Book[]>('/books/me'),
   create: (input: CreateBookInput) => api.post<Book>('/books', buildFormData(input)),

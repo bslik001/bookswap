@@ -26,18 +26,6 @@ export type BookDetail = Book & {
   hasRequested: boolean;
 };
 
-export type PaginationMeta = {
-  page: number;
-  limit: number;
-  total: number;
-  totalPages: number;
-};
-
-export type Paginated<T> = {
-  books: T[];
-  meta: PaginationMeta;
-};
-
 export type BookFilters = {
   grade?: string;
   condition?: BookCondition;

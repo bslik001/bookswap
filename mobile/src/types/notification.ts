@@ -13,12 +13,3 @@ export type Notification = {
   createdAt: string;
 };
 
-export type NotificationsPage = {
-  notifications: Notification[];
-  meta: {
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
-  };
-};
