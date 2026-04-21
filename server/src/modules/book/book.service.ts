@@ -10,6 +10,11 @@ const ownerSelect = {
   lastName: true,
 };
 
+// Niveaux scolaires standards exposes dans le filtre mobile. Le sentinel
+// GRADE_OTHER_SENTINEL declenche un filtre "grade non present dans cette liste".
+const KNOWN_GRADES = ['6e', '5e', '4e', '3e', '2nde', '1ere', 'Tle'];
+const GRADE_OTHER_SENTINEL = '__other__';
+
 // ── Creer un livre ──
 export const createBook = async (userId: string, data: CreateBookInput, imageBuffer: Buffer) => {
   const { url, publicId } = await uploadImage(imageBuffer, 'books');
@@ -27,7 +32,12 @@ export const createBook = async (userId: string, data: CreateBookInput, imageBuf
 };
 
 // ── Modifier un livre ──
-export const updateBook = async (userId: string, bookId: string, data: UpdateBookInput, imageBuffer?: Buffer) => {
+export const updateBook = async (
+  userId: string,
+  bookId: string,
+  data: UpdateBookInput,
+  imageBuffer?: Buffer,
+) => {
   const book = await prisma.book.findUnique({ where: { id: bookId } });
 
   if (!book) {
@@ -114,13 +124,26 @@ export const listBooks = async (query: ListBooksInput, currentUserId: string) =>
 
   // Si recherche full-text, utiliser $queryRaw
   if (search) {
-    return listBooksFullText(search, { grade, condition, status, skip, take, page, limit, currentUserId });
+    return listBooksFullText(search, {
+      grade,
+      condition,
+      status,
+      skip,
+      take,
+      page,
+      limit,
+      currentUserId,
+    });
   }
 
   // Sinon, filtres Prisma classiques
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const where: Record<string, any> = {};
-  if (grade) where.grade = grade;
+  if (grade === GRADE_OTHER_SENTINEL) {
+    where.grade = { notIn: KNOWN_GRADES };
+  } else if (grade) {
+    where.grade = grade;
+  }
   if (condition) where.condition = condition;
   if (status) where.status = status;
   else where.status = 'AVAILABLE'; // Par defaut, seulement les livres disponibles
@@ -154,13 +177,26 @@ export const listBooks = async (query: ListBooksInput, currentUserId: string) =>
 // et ne sont jamais interpolees dans la string SQL.
 async function listBooksFullText(
   search: string,
-  opts: { grade?: string; condition?: string; status?: string; skip: number; take: number; page: number; limit: number; currentUserId: string }
+  opts: {
+    grade?: string;
+    condition?: string;
+    status?: string;
+    skip: number;
+    take: number;
+    page: number;
+    limit: number;
+    currentUserId: string;
+  },
 ) {
   const conditions: string[] = [`search_vector @@ plainto_tsquery('french', $1)`];
   const params: (string | number)[] = [search];
   let paramIndex = 2;
 
-  if (opts.grade) {
+  if (opts.grade === GRADE_OTHER_SENTINEL) {
+    const placeholders = KNOWN_GRADES.map(() => `$${paramIndex++}`).join(', ');
+    conditions.push(`b.grade NOT IN (${placeholders})`);
+    params.push(...KNOWN_GRADES);
+  } else if (opts.grade) {
     conditions.push(`b.grade = $${paramIndex}`);
     params.push(opts.grade);
     paramIndex++;
@@ -180,7 +216,7 @@ async function listBooksFullText(
 
   const countResult = await prisma.$queryRawUnsafe<[{ count: bigint }]>(
     `SELECT COUNT(*) as count FROM books b WHERE ${whereClause}`,
-    ...params
+    ...params,
   );
   const total = Number(countResult[0].count);
 
@@ -195,7 +231,9 @@ async function listBooksFullText(
      WHERE ${whereClause}
      ORDER BY rank DESC, b.created_at DESC
      LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`,
-    ...params, opts.take, opts.skip
+    ...params,
+    opts.take,
+    opts.skip,
   );
 
   const data = books.map((row) => ({

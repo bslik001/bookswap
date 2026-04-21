@@ -1,7 +1,7 @@
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { colors, radius, spacing, typography } from '@/theme';
 import type { BookCondition } from '@/types/book';
-import { GRADE_OPTIONS } from '@/utils/grades';
+import { GRADE_OPTIONS, OTHER_GRADE_VALUE } from '@/utils/grades';
 
 type BookFiltersProps = {
   grade?: string;
@@ -31,6 +31,16 @@ export function BookFilters({ grade, condition, onChange }: BookFiltersProps) {
             onPress={() => onChange({ grade: grade === opt.value ? undefined : opt.value, condition })}
           />
         ))}
+        <FilterChip
+          label="Autres"
+          active={grade === OTHER_GRADE_VALUE}
+          onPress={() =>
+            onChange({
+              grade: grade === OTHER_GRADE_VALUE ? undefined : OTHER_GRADE_VALUE,
+              condition,
+            })
+          }
+        />
       </ScrollView>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.row}>
         <FilterChip

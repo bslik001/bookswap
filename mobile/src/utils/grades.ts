@@ -7,3 +7,6 @@ export const GRADE_OPTIONS = [
   { value: '1ere', label: '1ere' },
   { value: 'Tle', label: 'Terminale' },
 ] as const;
+
+// Sentinelle envoyee au serveur pour filtrer les niveaux hors liste standard.
+export const OTHER_GRADE_VALUE = '__other__';
