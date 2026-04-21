@@ -58,6 +58,7 @@ export default function SuppliesListScreen() {
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
+        style={styles.filtersScroll}
         contentContainerStyle={styles.filters}
       >
         <FilterChip label="Toutes" active={!type} onPress={() => setType(undefined)} />
@@ -161,7 +162,13 @@ const styles = StyleSheet.create({
   header: { paddingHorizontal: spacing.xl, paddingTop: spacing.md, paddingBottom: spacing.sm },
   title: { ...typography.title, color: colors.text },
   subtitle: { ...typography.caption, color: colors.textMuted, marginTop: spacing.xs },
-  filters: { paddingHorizontal: spacing.xl, gap: spacing.sm, paddingVertical: spacing.sm },
+  filtersScroll: { flexGrow: 0 },
+  filters: {
+    paddingHorizontal: spacing.xl,
+    gap: spacing.sm,
+    paddingVertical: spacing.sm,
+    alignItems: 'center',
+  },
   errorWrapper: { paddingHorizontal: spacing.xl },
   list: { paddingHorizontal: spacing.xl, paddingBottom: spacing.xxl },
   loader: { marginTop: spacing.xxl },
@@ -190,7 +197,7 @@ const styles = StyleSheet.create({
   supplier: { ...typography.caption, color: colors.textMuted, marginTop: spacing.xs },
   price: { ...typography.caption, color: colors.primary, marginTop: spacing.xs, fontWeight: '600' },
   chip: {
-    paddingVertical: spacing.xs,
+    paddingVertical: spacing.sm,
     paddingHorizontal: spacing.md,
     borderRadius: radius.pill,
     backgroundColor: colors.surface,
