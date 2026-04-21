@@ -3,8 +3,7 @@ import bcrypt from 'bcrypt';
 
 const prisma = new PrismaClient();
 
-const PLACEHOLDER_IMAGE =
-  'https://res.cloudinary.com/demo/image/upload/v1/sample.jpg';
+const PLACEHOLDER_IMAGE = 'https://res.cloudinary.com/demo/image/upload/v1/sample.jpg';
 
 async function hash(plain: string): Promise<string> {
   return bcrypt.hash(plain, 12);
@@ -70,10 +69,10 @@ async function main(): Promise<void> {
   });
 
   const userSpecs = [
-    { firstName: 'Ibrahima', lastName: 'Fall', phone: '+221771111101', grades: ['6eme', '5eme'] },
-    { firstName: 'Aissatou', lastName: 'Ba', phone: '+221771111102', grades: ['4eme', '3eme'] },
-    { firstName: 'Ousmane', lastName: 'Sow', phone: '+221771111103', grades: ['Seconde', 'Premiere'] },
-    { firstName: 'Mariama', lastName: 'Diop', phone: '+221771111104', grades: ['Terminale'] },
+    { firstName: 'Ibrahima', lastName: 'Fall', phone: '+221771111101', grades: ['6e', '5e'] },
+    { firstName: 'Aissatou', lastName: 'Ba', phone: '+221771111102', grades: ['4e', '3e'] },
+    { firstName: 'Ousmane', lastName: 'Sow', phone: '+221771111103', grades: ['2nde', '1ere'] },
+    { firstName: 'Mariama', lastName: 'Diop', phone: '+221771111104', grades: ['Tle'] },
     { firstName: 'Cheikh', lastName: 'Gueye', phone: '+221771111105', grades: ['CM1', 'CM2'] },
   ];
 
@@ -97,14 +96,24 @@ async function main(): Promise<void> {
   );
 
   const bookSpecs = [
-    { title: 'Mathematiques 6eme', author: 'Hachette', grade: '6eme', condition: BookCondition.USED },
-    { title: 'Francais 6eme - Belin', author: 'Belin', grade: '6eme', condition: BookCondition.NEW },
-    { title: 'Histoire-Geo 5eme', author: 'Nathan', grade: '5eme', condition: BookCondition.USED },
-    { title: 'SVT 4eme', author: 'Magnard', grade: '4eme', condition: BookCondition.USED },
-    { title: 'Anglais 3eme', author: 'Didier', grade: '3eme', condition: BookCondition.NEW },
-    { title: 'Maths Seconde', author: 'Hachette', grade: 'Seconde', condition: BookCondition.USED },
-    { title: 'Physique-Chimie Premiere S', author: 'Bordas', grade: 'Premiere', condition: BookCondition.USED },
-    { title: 'Philosophie Terminale', author: 'Hatier', grade: 'Terminale', condition: BookCondition.USED },
+    { title: 'Mathematiques 6eme', author: 'Hachette', grade: '6e', condition: BookCondition.USED },
+    { title: 'Francais 6eme - Belin', author: 'Belin', grade: '6e', condition: BookCondition.NEW },
+    { title: 'Histoire-Geo 5eme', author: 'Nathan', grade: '5e', condition: BookCondition.USED },
+    { title: 'SVT 4eme', author: 'Magnard', grade: '4e', condition: BookCondition.USED },
+    { title: 'Anglais 3eme', author: 'Didier', grade: '3e', condition: BookCondition.NEW },
+    { title: 'Maths Seconde', author: 'Hachette', grade: '2nde', condition: BookCondition.USED },
+    {
+      title: 'Physique-Chimie Premiere S',
+      author: 'Bordas',
+      grade: '1ere',
+      condition: BookCondition.USED,
+    },
+    {
+      title: 'Philosophie Terminale',
+      author: 'Hatier',
+      grade: 'Tle',
+      condition: BookCondition.USED,
+    },
     { title: 'Lecture CM1', author: 'Istra', grade: 'CM1', condition: BookCondition.NEW },
     { title: 'Calcul CM2', author: 'Retz', grade: 'CM2', condition: BookCondition.USED },
   ];
