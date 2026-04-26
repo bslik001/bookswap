@@ -79,16 +79,18 @@ bookswap/
 # Installer les hooks Git du monorepo
 npm install
 
-# Backend (Postgres + API en Docker, hot reload)
-cd server && npm ci && cd ..
-docker compose up -d
+# Bootstrap demo : Postgres + migrations + seed (admin, fournisseurs, livres)
+npm run demo
 
-# App mobile
-cd mobile
-npm install
-cp .env.example .env
-npm start
+# Lancer l'API
+cd server && npm run dev
+
+# App mobile (autre terminal)
+cd mobile && npm install && cp .env.example .env && npm start
 ```
+
+> `npm run demo` cree 1 admin, 2 fournisseurs, 5 utilisateurs et 10 livres.
+> Mot de passe par defaut : `Password123!`. Email admin : `admin@bookswap.sn`.
 
 Details d'install, env et tests par sous-projet :
 - **API** → [server/README.md](server/README.md)
