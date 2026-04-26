@@ -4,7 +4,8 @@
   "description": "BookSwap monorepo — dev tooling (hooks, commit-msg) at root",
   "scripts": {
     "prepare": "husky",
-    "lint-staged": "lint-staged"
+    "lint-staged": "lint-staged",
+    "demo": "bash scripts/demo.sh"
   },
   "devDependencies": {
     "@commitlint/cli": "^19.6.1",
