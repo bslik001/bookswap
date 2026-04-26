@@ -17,6 +17,9 @@ export function BookCard({ book, onPress }: BookCardProps) {
   return (
     <Pressable
       onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={`${book.title}${book.author ? `, ${book.author}` : ''}, niveau ${book.grade}, ${conditionLabel[book.condition]}`}
+      accessibilityHint="Voir les details du livre"
       style={({ pressed }) => [styles.card, pressed && styles.pressed]}
     >
       <View style={styles.imageWrapper}>

@@ -17,12 +17,18 @@ export function Button({
   fullWidth = true,
   disabled,
   style,
+  accessibilityLabel,
+  accessibilityHint,
   ...rest
 }: ButtonProps) {
   const isDisabled = disabled || loading;
   return (
     <Pressable
       disabled={isDisabled}
+      accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel ?? label}
+      accessibilityHint={accessibilityHint}
+      accessibilityState={{ disabled: isDisabled, busy: loading }}
       style={({ pressed }) => [
         styles.base,
         styles[variant],

@@ -65,6 +65,9 @@ export default function NotificationsScreen() {
         <Pressable
           onPress={() => markAllRead.mutate()}
           disabled={!hasUnread || markAllRead.isPending}
+          accessibilityRole="button"
+          accessibilityLabel="Marquer toutes les notifications comme lues"
+          accessibilityState={{ disabled: !hasUnread || markAllRead.isPending }}
           hitSlop={8}
         >
           <Text style={[styles.action, (!hasUnread || markAllRead.isPending) && styles.actionDisabled]}>
@@ -114,6 +117,8 @@ function Row({ item, onPress }: { item: Notification; onPress: () => void }) {
   return (
     <Pressable
       onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={`${item.isRead ? 'Notification lue' : 'Notification non lue'} : ${item.content}`}
       style={({ pressed }) => [styles.row, !item.isRead && styles.rowUnread, pressed && styles.rowPressed]}
     >
       <View style={styles.iconWrapper}>

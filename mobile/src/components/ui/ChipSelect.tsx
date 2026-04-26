@@ -24,6 +24,10 @@ export function ChipSelect({ label, options, selected, onChange, error }: ChipSe
             <Pressable
               key={opt.value}
               onPress={() => toggle(opt.value)}
+              accessibilityRole="button"
+              accessibilityLabel={opt.label}
+              accessibilityState={{ selected: active }}
+              hitSlop={6}
               style={[styles.chip, active && styles.chipActive]}
             >
               <Text style={[styles.chipText, active && styles.chipTextActive]}>{opt.label}</Text>

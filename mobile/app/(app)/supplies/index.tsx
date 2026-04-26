@@ -113,6 +113,9 @@ function SupplyRow({ item, onPress }: { item: Supply; onPress: () => void }) {
   return (
     <Pressable
       onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={`${item.name}, fournisseur ${item.supplier.firstName} ${item.supplier.lastName.charAt(0)}.${item.price ? `, ${Number(item.price).toLocaleString('fr-FR')} FCFA` : ''}`}
+      accessibilityHint="Voir les details de la fourniture"
       style={({ pressed }) => [styles.row, pressed && styles.rowPressed]}
     >
       {item.imageUrl ? (
@@ -151,7 +154,14 @@ function FilterChip({
   onPress: () => void;
 }) {
   return (
-    <Pressable onPress={onPress} style={[styles.chip, active && styles.chipActive]}>
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      accessibilityState={{ selected: active }}
+      hitSlop={6}
+      style={[styles.chip, active && styles.chipActive]}
+    >
       <Text style={[styles.chipText, active && styles.chipTextActive]}>{label}</Text>
     </Pressable>
   );
