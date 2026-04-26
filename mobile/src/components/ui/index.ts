@@ -4,3 +4,4 @@ export { Button } from './Button';
 export { ErrorBanner } from './ErrorBanner';
 export { ChipSelect } from './ChipSelect';
 export { StatusBadge } from './StatusBadge';
+export { OfflineBanner } from './OfflineBanner';
