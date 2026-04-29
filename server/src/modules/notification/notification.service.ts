@@ -8,7 +8,7 @@ import type { NotificationType } from '@prisma/client';
 export const createNotification = async (
   userId: string,
   type: NotificationType,
-  content: string
+  content: string,
 ) => {
   const notification = await prisma.notification.create({
     data: { userId, type, content },
@@ -76,4 +76,20 @@ export const getUnreadCount = async (userId: string) => {
   });
 
   return { count };
+};
+
+// ── Admin : envoyer une annonce systeme a tous les utilisateurs actifs ──
+export const broadcastSystemNotification = async (content: string) => {
+  const users = await prisma.user.findMany({
+    where: { isActive: true },
+    select: { id: true },
+  });
+
+  // createMany ne declenche pas le push individuel : ici on accepte
+  // ce compromis (le push admin n'est pas critique).
+  const result = await prisma.notification.createMany({
+    data: users.map((u) => ({ userId: u.id, type: 'SYSTEM' as const, content })),
+  });
+
+  return { recipients: result.count };
 };

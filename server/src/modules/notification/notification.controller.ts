@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { asyncHandler } from '../../utils/asyncHandler';
 import * as notificationService from './notification.service';
-import type { ListNotificationsInput } from './notification.schema';
+import type { ListNotificationsInput, BroadcastSystemInput } from './notification.schema';
 
 export const listNotifications = asyncHandler(async (req: Request, res: Response) => {
   const { page, limit } = req.query as unknown as ListNotificationsInput;
@@ -22,4 +22,10 @@ export const markAsRead = asyncHandler(async (req: Request, res: Response) => {
 export const markAllAsRead = asyncHandler(async (req: Request, res: Response) => {
   const result = await notificationService.markAllAsRead(req.user!.id);
   res.json({ success: true, data: result });
+});
+
+export const broadcastSystem = asyncHandler(async (req: Request, res: Response) => {
+  const { content } = req.body as BroadcastSystemInput;
+  const result = await notificationService.broadcastSystemNotification(content);
+  res.status(201).json({ success: true, data: result });
 });

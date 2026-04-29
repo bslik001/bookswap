@@ -16,7 +16,9 @@ import userRoutes, { adminUserRouter } from './modules/user/user.routes';
 import bookRoutes, { adminBookRouter } from './modules/book/book.routes';
 import requestRoutes, { adminRequestRouter } from './modules/request/request.routes';
 import supplyRoutes from './modules/supply/supply.routes';
-import notificationRoutes from './modules/notification/notification.routes';
+import notificationRoutes, {
+  adminNotificationRouter,
+} from './modules/notification/notification.routes';
 
 const app = express();
 
@@ -72,6 +74,7 @@ app.use('/api/requests', requestRoutes);
 app.use('/api/admin/requests', adminRequestRouter);
 app.use('/api/supplies', supplyRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/admin/notifications', adminNotificationRouter);
 
 // ── 404 pour routes non trouvees ──
 app.use((_req, _res, next) => {
