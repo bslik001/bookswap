@@ -38,6 +38,11 @@ export const deleteAccount = asyncHandler(async (req: Request, res: Response) =>
   res.json({ success: true, data: { message: 'Compte supprime avec succes' } });
 });
 
+export const adminDeleteUser = asyncHandler(async (req: Request, res: Response) => {
+  await userService.adminDeleteUser(req.params.id as string, req.user!.id);
+  res.json({ success: true, data: { message: 'Utilisateur supprime avec succes' } });
+});
+
 export const getStats = asyncHandler(async (_req: Request, res: Response) => {
   const stats = await userService.getStats();
   res.json({ success: true, data: stats });

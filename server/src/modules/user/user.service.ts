@@ -4,7 +4,6 @@ import { comparePassword } from '../../utils/password';
 import { paginate, buildMeta } from '../../utils/pagination';
 import type { UpdateProfileInput, ListUsersInput } from './user.schema';
 
-
 const publicUserSelect = {
   id: true,
   firstName: true,
@@ -151,13 +150,43 @@ export const deleteAccount = async (userId: string, password: string) => {
   await prisma.user.delete({ where: { id: userId } });
 };
 
+// ── Admin : supprimer un utilisateur ──
+export const adminDeleteUser = async (targetUserId: string, currentAdminId: string) => {
+  if (targetUserId === currentAdminId) {
+    throw new AppError(
+      400,
+      'FORBIDDEN_SELF',
+      'Utilisez "Supprimer mon compte" pour supprimer votre propre compte.',
+    );
+  }
+
+  const user = await prisma.user.findUnique({ where: { id: targetUserId } });
+  if (!user) {
+    throw new AppError(404, 'NOT_FOUND', 'Utilisateur introuvable');
+  }
+
+  if (user.role === 'ADMIN') {
+    throw new AppError(403, 'FORBIDDEN', 'Impossible de supprimer un autre administrateur');
+  }
+
+  // Suppression en cascade (les relations ont onDelete: Cascade)
+  await prisma.user.delete({ where: { id: targetUserId } });
+};
+
 // ── Admin : statistiques globales ──
 export const getStats = async () => {
   const [
-    totalUsers, activeUsers, blockedUsers,
-    availableBooks, reservedBooks, exchangedBooks,
-    pendingRequests, inProgressRequests, completedRequests,
-    totalSupplies, totalContactRequests,
+    totalUsers,
+    activeUsers,
+    blockedUsers,
+    availableBooks,
+    reservedBooks,
+    exchangedBooks,
+    pendingRequests,
+    inProgressRequests,
+    completedRequests,
+    totalSupplies,
+    totalContactRequests,
   ] = await Promise.all([
     prisma.user.count(),
     prisma.user.count({ where: { isActive: true } }),

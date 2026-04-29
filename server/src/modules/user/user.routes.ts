@@ -28,3 +28,4 @@ adminUserRouter.use(authorize('ADMIN'));
 adminUserRouter.get('/stats', userController.getStats);
 adminUserRouter.get('/', validate(listUsersSchema, 'query'), userController.listUsers);
 adminUserRouter.put('/:id/block', validateId, userController.blockUser);
+adminUserRouter.delete('/:id', validateId, userController.adminDeleteUser);
