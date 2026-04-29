@@ -378,6 +378,51 @@ describe('Book approval (admin)', () => {
     expect(notif!.content).toContain('approuve');
   });
 
+  it('approving a book notifies users with matching gradeInterests (except the owner)', async () => {
+    const { user: owner } = await createTestUser({ firstName: 'Owner' });
+    const { user: admin } = await createTestUser({ role: Role.ADMIN, firstName: 'Admin' });
+    const { user: interested } = await createTestUser({ firstName: 'Interested' });
+    const { user: notInterested } = await createTestUser({ firstName: 'Other' });
+
+    // L'utilisateur interesse a "6e" dans ses interets, pas l'autre.
+    await prisma.user.update({
+      where: { id: interested.id },
+      data: { gradeInterests: ['6e', '5e'] },
+    });
+    await prisma.user.update({
+      where: { id: notInterested.id },
+      data: { gradeInterests: ['Tle'] },
+    });
+    // L'owner aussi a "6e" mais ne doit pas se notifier lui-meme.
+    await prisma.user.update({ where: { id: owner.id }, data: { gradeInterests: ['6e'] } });
+
+    const book = await createTestBook(owner.id, {
+      title: 'Maths 6e',
+      grade: '6e',
+      isApproved: false,
+    });
+
+    await request(app)
+      .put(`/api/admin/books/${book.id}/approval`)
+      .set('Authorization', `Bearer ${accessTokenFor(admin)}`)
+      .send({ approve: true });
+
+    const interestedNotif = await prisma.notification.findFirst({
+      where: { userId: interested.id, type: 'SYSTEM', content: { contains: 'Maths 6e' } },
+    });
+    expect(interestedNotif).toBeTruthy();
+
+    const otherNotif = await prisma.notification.findFirst({
+      where: { userId: notInterested.id, content: { contains: 'Maths 6e' } },
+    });
+    expect(otherNotif).toBeNull();
+
+    const ownerSelfNotif = await prisma.notification.findFirst({
+      where: { userId: owner.id, content: { contains: 'Nouveau livre pour le niveau' } },
+    });
+    expect(ownerSelfNotif).toBeNull();
+  });
+
   it('PUT /api/admin/books/:id/approval with approve=false deletes book and notifies owner', async () => {
     const { user: owner } = await createTestUser();
     const { user: admin } = await createTestUser({ role: Role.ADMIN });

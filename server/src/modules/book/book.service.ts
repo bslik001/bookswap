@@ -330,6 +330,26 @@ export const setBookApproval = async (bookId: string, approve: boolean) => {
       'SYSTEM',
       `Votre livre "${book.title}" a ete approuve et est maintenant visible.`,
     );
+
+    // Notifier les utilisateurs interesses par ce niveau scolaire (sauf l'owner).
+    const interested = await prisma.user.findMany({
+      where: {
+        gradeInterests: { has: book.grade },
+        id: { not: book.ownerId },
+        isActive: true,
+      },
+      select: { id: true },
+    });
+    await Promise.all(
+      interested.map((u) =>
+        createNotification(
+          u.id,
+          'SYSTEM',
+          `Nouveau livre pour le niveau ${book.grade} : "${book.title}".`,
+        ),
+      ),
+    );
+
     return updated;
   }
 
