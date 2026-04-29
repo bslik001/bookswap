@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { authenticate } from '../../middleware/auth';
+import { authenticate, authorize } from '../../middleware/auth';
 import { validate } from '../../middleware/validate';
 import { validateId } from '../../middleware/validateId';
 import { uploadSingle } from '../../middleware/upload';
@@ -28,9 +28,24 @@ router.get('/:id/requests', validateId, requestController.getRequestsForBook);
 router.post('/', uploadSingle('image'), validate(createBookSchema), bookController.createBook);
 
 // Modifier
-router.put('/:id', validateId, uploadSingle('image'), validate(updateBookSchema), bookController.updateBook);
+router.put(
+  '/:id',
+  validateId,
+  uploadSingle('image'),
+  validate(updateBookSchema),
+  bookController.updateBook,
+);
 
 // Supprimer
 router.delete('/:id', validateId, bookController.deleteBook);
 
 export default router;
+
+// ── Routes admin (montees separement dans app.ts) ──
+export const adminBookRouter = Router();
+
+adminBookRouter.use(authenticate);
+adminBookRouter.use(authorize('ADMIN'));
+
+adminBookRouter.get('/pending', bookController.listPendingBooks);
+adminBookRouter.put('/:id/approval', validateId, bookController.setBookApproval);

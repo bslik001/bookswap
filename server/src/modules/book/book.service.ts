@@ -2,6 +2,7 @@ import { prisma } from '../../lib/prisma';
 import { AppError } from '../../middleware/errorHandler';
 import { uploadImage, deleteImage } from '../../utils/cloudinary';
 import { paginate, buildMeta } from '../../utils/pagination';
+import { createNotification } from '../notification/notification.service';
 import type { CreateBookInput, UpdateBookInput, ListBooksInput } from './book.schema';
 
 const ownerSelect = {
@@ -87,7 +88,11 @@ export const deleteBook = async (userId: string, userRole: string, bookId: strin
 };
 
 // ── Detail d'un livre ──
-export const getBookById = async (bookId: string, currentUserId: string) => {
+export const getBookById = async (
+  bookId: string,
+  currentUserId: string,
+  currentUserRole: string,
+) => {
   const book = await prisma.book.findUnique({
     where: { id: bookId },
     include: {
@@ -101,6 +106,11 @@ export const getBookById = async (bookId: string, currentUserId: string) => {
   });
 
   if (!book) {
+    throw new AppError(404, 'NOT_FOUND', 'Livre introuvable');
+  }
+
+  // Un livre non approuve n'est visible que par son proprietaire ou un admin.
+  if (!book.isApproved && book.ownerId !== currentUserId && currentUserRole !== 'ADMIN') {
     throw new AppError(404, 'NOT_FOUND', 'Livre introuvable');
   }
 
@@ -118,9 +128,10 @@ export const getBookById = async (bookId: string, currentUserId: string) => {
 };
 
 // ── Lister les livres (avec recherche full-text) ──
-export const listBooks = async (query: ListBooksInput, currentUserId: string) => {
+export const listBooks = async (query: ListBooksInput, currentUserRole: string) => {
   const { page, limit, grade, condition, status, search } = query;
   const { skip, take } = paginate(page, limit);
+  const isAdmin = currentUserRole === 'ADMIN';
 
   // Si recherche full-text, utiliser $queryRaw
   if (search) {
@@ -132,7 +143,7 @@ export const listBooks = async (query: ListBooksInput, currentUserId: string) =>
       take,
       page,
       limit,
-      currentUserId,
+      isAdmin,
     });
   }
 
@@ -147,6 +158,7 @@ export const listBooks = async (query: ListBooksInput, currentUserId: string) =>
   if (condition) where.condition = condition;
   if (status) where.status = status;
   else where.status = 'AVAILABLE'; // Par defaut, seulement les livres disponibles
+  if (!isAdmin) where.isApproved = true; // Les non-admins ne voient que les livres approuves
 
   const [books, total] = await Promise.all([
     prisma.book.findMany({
@@ -185,7 +197,7 @@ async function listBooksFullText(
     take: number;
     page: number;
     limit: number;
-    currentUserId: string;
+    isAdmin: boolean;
   },
 ) {
   const conditions: string[] = [`search_vector @@ plainto_tsquery('french', $1)`];
@@ -211,6 +223,10 @@ async function listBooksFullText(
   conditions.push(`b.status = $${paramIndex}::"BookStatus"`);
   params.push(statusFilter);
   paramIndex++;
+
+  if (!opts.isAdmin) {
+    conditions.push(`b.is_approved = true`);
+  }
 
   const whereClause = conditions.join(' AND ');
 
@@ -267,4 +283,65 @@ export const getMyBooks = async (userId: string) => {
   });
 
   return books;
+};
+
+// ── Lister les livres en attente de validation (admin) ──
+export const listPendingBooks = async (page: number, limit: number) => {
+  const { skip, take } = paginate(page, limit);
+  const where = { isApproved: false };
+
+  const [books, total] = await Promise.all([
+    prisma.book.findMany({
+      where,
+      include: { owner: { select: ownerSelect } },
+      orderBy: { createdAt: 'asc' },
+      skip,
+      take,
+    }),
+    prisma.book.count({ where }),
+  ]);
+
+  const data = books.map(({ owner, ...book }) => ({
+    ...book,
+    owner: {
+      id: owner.id,
+      firstName: owner.firstName,
+      lastName: owner.lastName.charAt(0) + '.',
+    },
+  }));
+
+  return { books: data, meta: buildMeta(total, page, limit) };
+};
+
+// ── Approuver ou refuser un livre (admin) ──
+export const setBookApproval = async (bookId: string, approve: boolean) => {
+  const book = await prisma.book.findUnique({ where: { id: bookId } });
+  if (!book) {
+    throw new AppError(404, 'NOT_FOUND', 'Livre introuvable');
+  }
+
+  if (approve) {
+    const updated = await prisma.book.update({
+      where: { id: bookId },
+      data: { isApproved: true },
+    });
+    await createNotification(
+      book.ownerId,
+      'SYSTEM',
+      `Votre livre "${book.title}" a ete approuve et est maintenant visible.`,
+    );
+    return updated;
+  }
+
+  // Refus : on supprime le livre (et son image) et on notifie l'owner.
+  if (book.imagePublicId) {
+    await deleteImage(book.imagePublicId);
+  }
+  await prisma.book.delete({ where: { id: bookId } });
+  await createNotification(
+    book.ownerId,
+    'SYSTEM',
+    `Votre livre "${book.title}" n'a pas ete valide et a ete retire.`,
+  );
+  return null;
 };

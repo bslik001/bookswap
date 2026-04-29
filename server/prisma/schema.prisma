@@ -85,6 +85,7 @@ model Book {
   imageUrl      String        @map("image_url") @db.VarChar(500)
   imagePublicId String?       @map("image_public_id") @db.VarChar(255)
   status        BookStatus    @default(AVAILABLE)
+  isApproved    Boolean       @default(false) @map("is_approved")
   ownerId       String        @map("owner_id") @db.Uuid
   createdAt     DateTime      @default(now()) @map("created_at")
   updatedAt     DateTime      @updatedAt @map("updated_at")
@@ -96,6 +97,7 @@ model Book {
   @@index([status])
   @@index([ownerId])
   @@index([status, grade, condition])
+  @@index([isApproved])
   @@map("books")
 }
 

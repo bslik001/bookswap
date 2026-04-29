@@ -160,7 +160,7 @@ describe('GET /api/books/me', () => {
 });
 
 describe('POST /api/books', () => {
-  it('creates a book and uploads the image', async () => {
+  it('creates a book and uploads the image (book starts unapproved)', async () => {
     const { user } = await createTestUser();
 
     const res = await request(app)
@@ -174,10 +174,12 @@ describe('POST /api/books', () => {
     expect(res.status).toBe(201);
     expect(res.body.data.title).toBe('Nouveau livre');
     expect(res.body.data.imageUrl).toBe('https://test.local/img.jpg');
+    expect(res.body.data.isApproved).toBe(false);
     expect(uploadImage).toHaveBeenCalledOnce();
 
     const stored = await prisma.book.findUnique({ where: { id: res.body.data.id } });
     expect(stored!.ownerId).toBe(user.id);
+    expect(stored!.isApproved).toBe(false);
   });
 
   it('rejects creation without an image with 400', async () => {
@@ -274,5 +276,126 @@ describe('DELETE /api/books/:id', () => {
       .set('Authorization', `Bearer ${accessTokenFor(outsider)}`);
 
     expect(res.status).toBe(403);
+  });
+});
+
+describe('Book approval (admin)', () => {
+  it('hides unapproved books from public list', async () => {
+    const { user: owner } = await createTestUser();
+    const { user: viewer } = await createTestUser();
+    await createTestBook(owner.id, { title: 'Approved' });
+    await createTestBook(owner.id, { title: 'Pending', isApproved: false });
+
+    const res = await request(app)
+      .get('/api/books')
+      .set('Authorization', `Bearer ${accessTokenFor(viewer)}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.data).toHaveLength(1);
+    expect(res.body.data[0].title).toBe('Approved');
+  });
+
+  it('shows unapproved books to admin', async () => {
+    const { user: owner } = await createTestUser();
+    const { user: admin } = await createTestUser({ role: Role.ADMIN });
+    await createTestBook(owner.id, { title: 'Approved' });
+    await createTestBook(owner.id, { title: 'Pending', isApproved: false });
+
+    const res = await request(app)
+      .get('/api/books')
+      .set('Authorization', `Bearer ${accessTokenFor(admin)}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.data).toHaveLength(2);
+  });
+
+  it('hides unapproved book detail from non-owner non-admin', async () => {
+    const { user: owner } = await createTestUser();
+    const { user: outsider } = await createTestUser();
+    const book = await createTestBook(owner.id, { isApproved: false });
+
+    const res = await request(app)
+      .get(`/api/books/${book.id}`)
+      .set('Authorization', `Bearer ${accessTokenFor(outsider)}`);
+
+    expect(res.status).toBe(404);
+  });
+
+  it('lets the owner see their own pending book', async () => {
+    const { user: owner } = await createTestUser();
+    const book = await createTestBook(owner.id, { isApproved: false });
+
+    const res = await request(app)
+      .get(`/api/books/${book.id}`)
+      .set('Authorization', `Bearer ${accessTokenFor(owner)}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.data.isApproved).toBe(false);
+  });
+
+  it('GET /api/admin/books/pending lists only unapproved books', async () => {
+    const { user: owner } = await createTestUser();
+    const { user: admin } = await createTestUser({ role: Role.ADMIN });
+    await createTestBook(owner.id, { title: 'Approved' });
+    await createTestBook(owner.id, { title: 'Pending 1', isApproved: false });
+    await createTestBook(owner.id, { title: 'Pending 2', isApproved: false });
+
+    const res = await request(app)
+      .get('/api/admin/books/pending')
+      .set('Authorization', `Bearer ${accessTokenFor(admin)}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.data).toHaveLength(2);
+    expect(res.body.data.every((b: { title: string }) => b.title.startsWith('Pending'))).toBe(true);
+  });
+
+  it('rejects /api/admin/books/pending for non-admin with 403', async () => {
+    const { user } = await createTestUser();
+
+    const res = await request(app)
+      .get('/api/admin/books/pending')
+      .set('Authorization', `Bearer ${accessTokenFor(user)}`);
+
+    expect(res.status).toBe(403);
+  });
+
+  it('PUT /api/admin/books/:id/approval with approve=true marks book approved and notifies owner', async () => {
+    const { user: owner } = await createTestUser();
+    const { user: admin } = await createTestUser({ role: Role.ADMIN });
+    const book = await createTestBook(owner.id, { title: 'A valider', isApproved: false });
+
+    const res = await request(app)
+      .put(`/api/admin/books/${book.id}/approval`)
+      .set('Authorization', `Bearer ${accessTokenFor(admin)}`)
+      .send({ approve: true });
+
+    expect(res.status).toBe(200);
+    expect(res.body.data.isApproved).toBe(true);
+
+    const notif = await prisma.notification.findFirst({
+      where: { userId: owner.id, type: 'SYSTEM' },
+    });
+    expect(notif!.content).toContain('approuve');
+  });
+
+  it('PUT /api/admin/books/:id/approval with approve=false deletes book and notifies owner', async () => {
+    const { user: owner } = await createTestUser();
+    const { user: admin } = await createTestUser({ role: Role.ADMIN });
+    const book = await createTestBook(owner.id, { title: 'A refuser', isApproved: false });
+
+    const res = await request(app)
+      .put(`/api/admin/books/${book.id}/approval`)
+      .set('Authorization', `Bearer ${accessTokenFor(admin)}`)
+      .send({ approve: false });
+
+    expect(res.status).toBe(200);
+
+    const stored = await prisma.book.findUnique({ where: { id: book.id } });
+    expect(stored).toBeNull();
+
+    const notif = await prisma.notification.findFirst({
+      where: { userId: owner.id, type: 'SYSTEM' },
+    });
+    expect(notif!.content).toContain("n'a pas ete valide");
   });
 });

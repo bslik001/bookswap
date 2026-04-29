@@ -129,6 +129,7 @@ async function main(): Promise<void> {
           description: `Manuel scolaire ${spec.title}, en bon etat.`,
           imageUrl: PLACEHOLDER_IMAGE,
           status: BookStatus.AVAILABLE,
+          isApproved: true,
           ownerId: users[i % users.length].id,
         },
       }),

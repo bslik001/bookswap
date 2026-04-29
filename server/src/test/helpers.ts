@@ -20,7 +20,8 @@ export async function createTestUser(overrides: CreateUserOverrides = {}) {
     data: {
       firstName: overrides.firstName ?? 'Test',
       lastName: overrides.lastName ?? 'User',
-      email: overrides.email ?? `user-${Date.now()}-${Math.random().toString(36).slice(2, 7)}@test.sn`,
+      email:
+        overrides.email ?? `user-${Date.now()}-${Math.random().toString(36).slice(2, 7)}@test.sn`,
       password: hashed,
       phone: overrides.phone ?? `+2217${Math.floor(10000000 + Math.random() * 89999999)}`,
       address: 'Dakar, test',
@@ -42,6 +43,7 @@ type CreateBookOverrides = Partial<{
   grade: string;
   condition: BookCondition;
   status: BookStatus;
+  isApproved: boolean;
 }>;
 
 export async function createTestBook(ownerId: string, overrides: CreateBookOverrides = {}) {
@@ -52,6 +54,7 @@ export async function createTestBook(ownerId: string, overrides: CreateBookOverr
       grade: overrides.grade ?? '6eme',
       condition: overrides.condition ?? BookCondition.USED,
       status: overrides.status ?? BookStatus.AVAILABLE,
+      isApproved: overrides.isApproved ?? true,
       imageUrl: 'https://example.com/placeholder.jpg',
       ownerId,
     },
